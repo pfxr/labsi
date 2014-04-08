@@ -16,7 +16,6 @@ void setup(void)
     DDRC=0b00011111;
     initlcd();
 
-
     EICRA=0b00001111;
     EIMSK=0x03;
     PCICR |=(1<<PCIE2);
@@ -59,8 +58,6 @@ ISR(TIMER0_COMPA_vect) //tempos
             flag_reload=0;
         }
     }
-
-
 }
 
 ISR(INT0_vect) //disparo PD2 pino4
