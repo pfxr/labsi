@@ -17,7 +17,7 @@
 1396370980 /home/pedro/Documentos/LABSI/m328/C/projecto/codigo_joao/lcdv0_1/3310.h
 	<stdio.h>
 
-1396986444 source:/home/joao/Documentos/atmega/labsis/labsi/main.c
+1396986649 source:/home/joao/Documentos/atmega/labsis/labsi/main.c
 	<avr/io.h>
 	<stdio.h>
 	<avr/interrupt.h>
