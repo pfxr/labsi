@@ -69,7 +69,8 @@ ISR(INT0_vect) //disparo PD2 pino4
     {
         cont_sing500ms=10;
         municoes--;
-        PORTB|=(1<<PB7);
+
+        PORTB|=(1<<PB7); //pino 10
     }
 }
 
@@ -145,7 +146,7 @@ void inicio()
     cursorxy(0,0);
     //receber byte do PC
     //if qq
-    putstr("Dispare para  começar");
+    putstr("Dispare para  comecar");
     cursorxy(0,3);
     putstr("Player 2: ");
     while((EIFR&&0b00000001)!=1);
@@ -222,4 +223,3 @@ int main(void)
     }
     return 0;
 }
-//joao
