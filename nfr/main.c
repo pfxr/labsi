@@ -8,27 +8,26 @@
 
 #include <avr/io.h>
 #include <stdio.h>
-#define F_CPU 8000000UL  // 8 MHz
+#define F_CPU 1000000UL  // 8 MHz
 #include <util/delay.h>
 #include <avr/interrupt.h>
-
+#define BAUD 2400
 #include "nRF24L01.h"
-
+#define ubrr F_CPU/16/BAUD-1
 #define dataLen 3  //längd på datapacket som skickas/tas emot
 uint8_t *data;
 uint8_t *arr;
 
 
 /*****************ändrar klockan till 8MHz ist för 1MHz*****************************/
-void clockprescale(void)
+/*void clockprescale(void)
 {
 	CLKPR = 0b10000000;	//Prepare the chip for a change of clock prescale (CLKPCE=1 and the rest zeros)
 	CLKPR = 0b00000000;	//Wanted clock prescale (CLKPCE=0 and the four first bits CLKPS0-3 sets division factor = 1)
 	//See page 38 in datasheet
 }
 ////////////////////////////////////////////////////
-
-
+*/
 /*****************USART*****************************/  //Skickar data från chip till com-port simulator på datorn
 //Initiering
 
@@ -36,18 +35,16 @@ void usart_init(void)
 {
 	DDRD |= (1<<1);	//Set TXD (PD1) as output for USART
 
-	unsigned int USART_BAUDRATE = 9600;		//Same as in "terminal.exe"
-	unsigned int ubrr = (((F_CPU / (USART_BAUDRATE * 16UL))) - 1);	//baud prescale calculated according to F_CPU-define at top
+		//Same as in "terminal.exe"
 
 	/*Set baud rate */
 	UBRR0H = (unsigned char)(ubrr>>8);
-	UBRR0L = (unsigned char)ubrr;
+	UBRR0L = (unsigned char)(ubrr);
 
-	/*	Enable receiver and transmitter */
-	UCSR0B = (1<<RXEN0)|(1<<TXEN0);
-
-	/* Set frame format: 8data, 2stop bit, The two stop-bits does not seem to make any difference in my case!?*/
-	UCSR0C = (1<<USBS0)|(3<<UCSZ00);
+UCSR0C= 0b00000110;
+    UCSR0B= 0b00011000;
+    UCSR0B|=0x80;
+    SREG |= 0x80;
 
 }
 
@@ -328,7 +325,8 @@ void transmit_payload(uint8_t * W_buff)
 
 int main(void)
 {
-	clockprescale();
+//	clockprescale();
+DDRB|=(1<<PB0);
 	usart_init();
 	InitSPI();
     ioinit();
@@ -340,10 +338,10 @@ int main(void)
 	SETBIT(PORTB,0);		//För att se att dioden fungerar!
 	_delay_ms(1000);
 	CLEARBIT(PORTB,0);
-
 	while(1)
 	{
-		//Wait for USART-interrupt to send data...
+		if(GetReg(STATUS)==0x0E)
+		PORTB|=(1<<PB0);//Wait for USART-interrupt to send data...
 
 	}
 	return 0;
@@ -376,7 +374,7 @@ ISR(INT0_vect)	//vektorn som går igång när transmit_payload lyckats sända el
 
 ISR(USART_RX_vect)	///Vector that triggers when computer sends something to the Atmega88
 {
-	uint8_t W_buffer[dataLen];	//Creates a buffer to receive data with specified length (ex. dataLen = 5 bytes)
+	uint8_t W_buffer[20];	//Creates a buffer to receive data with specified length (ex. dataLen = 5 bytes)
 
 	int i;
 	for (i=0;i<dataLen;i++)
