@@ -16,7 +16,6 @@ void setup(void)
     DDRC=0b00011111;
     initlcd();
 
-
     EICRA=0b00001111;
     EIMSK=0x03;
     PCICR |=(1<<PCIE2);
@@ -33,34 +32,32 @@ void setup(void)
 
 ISR(TIMER0_COMPA_vect) //tempos
 {
-if(flag==1)
-    cont_20ms--;
-if((cont_20ms<0)&&(flag==0))
-    cont_20ms=4;
-if((cont_20ms==0)&&(flag==1))
-{
-    cont_20ms=6;
-    PCICR|=(1<<PCIE2);
-}
-if(cont_sing500ms>0)
-    cont_sing500ms--;
-if(cont_sing500ms>2)
-    PORTB^=(1<<PB7);
-if(cont_sing500ms==2)
-    PORTB&=~(1<<PB7);
-if(flag_reload==1) //precisa de reload
-{
-    PORTB|=(1<<PB0);
-    cont_reload--;
-    if(cont_reload==0)
+    if(flag==1)
+        cont_20ms--;
+    if((cont_20ms<0)&&(flag==0))
+        cont_20ms=4;
+    if((cont_20ms==0)&&(flag==1))
     {
-        PORTB&=~(1<<PB0);
-        municoes=balas;
-        flag_reload=0;
+        cont_20ms=6;
+        PCICR|=(1<<PCIE2);
     }
-}
-
-
+    if(cont_sing500ms>0)
+        cont_sing500ms--;
+    if(cont_sing500ms>2)
+        PORTB^=(1<<PB7);
+    if(cont_sing500ms==2)
+        PORTB&=~(1<<PB7);
+    if(flag_reload==1) //precisa de reload
+    {
+        PORTB|=(1<<PB0);
+        cont_reload--;
+        if(cont_reload==0)
+        {
+            PORTB&=~(1<<PB0);
+            municoes=balas;
+            flag_reload=0;
+        }
+    }
 }
 
 ISR(INT0_vect) //disparo PD2 pino4
@@ -69,7 +66,8 @@ ISR(INT0_vect) //disparo PD2 pino4
     {
         cont_sing500ms=10;
         municoes--;
-        PORTB|=(1<<PB7);
+
+        PORTB|=(1<<PB7); //pino 10
     }
 }
 
@@ -145,7 +143,7 @@ void inicio()
     cursorxy(0,0);
     //receber byte do PC
     //if qq
-    putstr("Dispare para  começar");
+    putstr("Dispare para  comecar");
     cursorxy(0,3);
     putstr("Player 2: ");
     while((EIFR&&0b00000001)!=1);
@@ -191,9 +189,6 @@ void printmenu()
             putstr("                 ");
         }
     }
-    cursorxy(0,5);
-    putstr("Tempo: ");
-
 }
 void gameover()
 {
@@ -222,4 +217,5 @@ int main(void)
     }
     return 0;
 }
-//joao
+
+//labsis
