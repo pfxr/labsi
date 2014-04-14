@@ -1,0 +1,13 @@
+# depslib dependency file v1.0
+1397495483 source:/home/joao/Documentos/atmega/labsis/labsi/modulos/RX/main.c
+	<avr/io.h>
+	<stdint.h>
+	"../nrf24.h"
+	<util/delay.h>
+
+1397495115 /home/joao/Documentos/atmega/labsis/labsi/modulos/nrf24.h
+	"nRF24L01.h"
+	<stdint.h>
+
+1397495115 /home/joao/Documentos/atmega/labsis/labsi/modulos/nRF24L01.h
+
