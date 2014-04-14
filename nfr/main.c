@@ -33,7 +33,7 @@ uint8_t *arr;
 
 void usart_init(void)
 {
-	DDRD |= (1<<1);	//Set TXD (PD1) as output for USART
+		//Set TXD (PD1) as output for USART
 
 		//Same as in "terminal.exe"
 
@@ -119,7 +119,7 @@ void INT0_interrupt_init(void)
 	EICRA  &=  ~(1<<ISC00);// INT0 falling edge	PD2
 
 	EIMSK |=  (1<<INT0);	//enablar int0
-  	//sei();              // Enable global interrupts görs sen
+  	sei();              // Enable global interrupts görs sen
 }
 
 //när chipets RX (usart) får ett meddelande fårn datorn går interruptet USART_RX igång längst ner.
@@ -308,7 +308,7 @@ void transmit_payload(uint8_t * W_buff)
 	WriteToNrf(R, W_TX_PAYLOAD, W_buff, dataLen);	//skickar datan i W_buff till nrf-en (obs går ej att läsa w_tx_payload-registret!!!)
 
 	sei();	//enable global interrupt- redan på!
-	//USART_Transmit(GetReg(STATUS));
+	USART_Transmit(GetReg(STATUS));
 
 	_delay_ms(10);		//behöver det verkligen vara ms å inte us??? JAAAAAA! annars funkar det inte!!!
 	SETBIT(PORTB, 1);	//CE hög=sänd data	INT0 interruptet körs när sändningen lyckats och om EN_AA är på, också svaret från recivern är mottagen
@@ -340,8 +340,8 @@ DDRB|=(1<<PB0);
 	CLEARBIT(PORTB,0);
 	while(1)
 	{
-		if(GetReg(STATUS)==0x0E)
-		PORTB|=(1<<PB0);//Wait for USART-interrupt to send data...
+		USART_Transmit(GetReg(STATUS));
+		_delay_ms(2000);//Wait for USART-interrupt to send data...
 
 	}
 	return 0;
