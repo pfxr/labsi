@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <avr/interrupt.h>
 #include "3310.h"
-//mudado
+
 #define balas 30
 
 volatile char frase[20];
