@@ -1,8 +1,12 @@
 # depslib dependency file v1.0
-1397495483 source:/home/joao/Documentos/atmega/labsis/labsi/modulos/RX/main.c
+1397496111 source:/home/joao/Documentos/atmega/labsis/labsi/modulos/RX/main.c
 	<avr/io.h>
 	<stdint.h>
 	"../nrf24.h"
+	<avr/interrupt.h>
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
 	<util/delay.h>
 
 1397495115 /home/joao/Documentos/atmega/labsis/labsi/modulos/nrf24.h
@@ -10,4 +14,10 @@
 	<stdint.h>
 
 1397495115 /home/joao/Documentos/atmega/labsis/labsi/modulos/nRF24L01.h
+
+1397495115 source:/home/joao/Documentos/atmega/labsis/labsi/modulos/nrf24.c
+	"nrf24.h"
+
+1397495621 source:/home/joao/Documentos/atmega/labsis/labsi/modulos/RX/radioPinFunctions.c
+	<avr/io.h>
 
