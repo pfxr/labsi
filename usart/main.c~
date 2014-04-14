@@ -5,7 +5,9 @@
 #include <string.h>
 
 #define FOSC 8000000
+
 #define F_CPU 8E6
+
 #define BAUD 2400
 #define USART_UBBR_VALUE FOSC/16/BAUD-1
 volatile unsigned char rx,flag_rx;
