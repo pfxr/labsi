@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <avr/interrupt.h>
 #include "3310.h"
+#include "nrf24.h"
 
 #define balas 30
 
@@ -140,15 +141,19 @@ void printinic()
 }
 void inicio()
 {
+    char data_array[4];
     clearram();
     cursorxy(0,0);
-    //receber byte do PC
-    //if qq
     putstr("Dispare para  comecar");
-    cursorxy(0,3);
-    putstr("Player 2: ");
     while((EIFR&&0b00000001)!=1);
-
+    enviar_nrf("14");
+    while((data_array[0]!='3')&&(data_array[1]!='4'))
+    {
+        if(nrf24_dataReady())
+        {
+        nrf24_getData(data_array);
+        }
+    }
     municoes=balas;
     clearram();
 

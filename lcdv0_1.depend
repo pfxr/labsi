@@ -26,12 +26,36 @@
 1396970677 /home/joao/Documentos/atmega/labsis/labsi/3310.h
 	<stdio.h>
 
-1397567286 source:/home/pedro/Documentos/LABSI/labsi/main.c
+1397580440 source:/home/pedro/Documentos/LABSI/labsi/main.c
 	<avr/io.h>
 	<stdio.h>
 	<avr/interrupt.h>
 	"3310.h"
+	"nrf24.h"
 
 1397567286 /home/pedro/Documentos/LABSI/labsi/3310.h
 	<stdio.h>
+
+1397567286 source:/home/pedro/Documentos/LABSI/labsi/radioPinFunctions.c
+	<avr/io.h>
+
+1397579540 source:/home/pedro/Documentos/LABSI/labsi/modulos_emteste/nrf24.c
+	"nrf24.h"
+	<string.h>
+
+1397579540 /home/pedro/Documentos/LABSI/labsi/modulos_emteste/nrf24.h
+	"nRF24L01.h"
+	<stdint.h>
+
+1397567286 /home/pedro/Documentos/LABSI/labsi/modulos_emteste/nRF24L01.h
+
+1397579540 source:/home/pedro/Documentos/LABSI/labsi/nrf24.c
+	"nrf24.h"
+	<string.h>
+
+1397579540 /home/pedro/Documentos/LABSI/labsi/nrf24.h
+	"nRF24L01.h"
+	<stdint.h>
+
+1397567286 /home/pedro/Documentos/LABSI/labsi/nRF24L01.h
 
