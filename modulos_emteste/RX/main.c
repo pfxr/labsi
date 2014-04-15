@@ -84,20 +84,7 @@ void processar_RX()
         PORTB&=~(1<<PB0);
     flag_rx=0;
 }
-void inic_nrf()
-{
-    uint8_t tx_address[5] = {0xD7,0xD7,0xD7,0xD7,0xD7};
-    uint8_t rx_address[5] = {0xE7,0xE7,0xE7,0xE7,0xE7};
-    /* init hardware pins */
-    nrf24_init();
 
-    /* Channel #2 , payload length: 4 */
-    nrf24_config(2,4);
-
-    /* Set the device addresses */
-    nrf24_tx_address(tx_address);
-    nrf24_rx_address(rx_address);
-}
 /* ------------------------------------------------------------------------- */
 uint8_t temp;
 uint8_t q = 0;

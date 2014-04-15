@@ -78,7 +78,7 @@ void    nrf24_writeRegister(uint8_t reg, uint8_t* value, uint8_t len);
  *    - Set CE pin output     */
 /* -------------------------------------------------------------------------- */
 extern void nrf24_setupPins();
-
+extern void inic_nrf();
 /* -------------------------------------------------------------------------- */
 /* nrf24 CE pin control function
  *    - state:1 => Pin HIGH
