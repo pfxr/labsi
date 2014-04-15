@@ -36,10 +36,9 @@ char buffer[30];
 /* ------------------------------------------------------------------------- */
 void uart_init()
 {
-<<<<<<< HEAD:modulos/RX/main.c
+
     DDRB=0x01;
-=======
->>>>>>> e1d6579f3bb6705e512cf049840bcb2accffb266:modulos_emteste/RX/main.c
+
     UBRR0H = (unsigned char)(USART_UBBR_VALUE>>8);
     UBRR0L = (unsigned char) (USART_UBBR_VALUE);
 
@@ -120,6 +119,7 @@ int main()
 
             if(nrf24_dataReady())
             {
+                PORTB^=0x01;
                 nrf24_getData(data_array);
                  enviar(data_array);
         }
