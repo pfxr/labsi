@@ -36,7 +36,8 @@ char buffer[30];
 /* ------------------------------------------------------------------------- */
 void uart_init()
 {
- UBRR0H = (unsigned char)(USART_UBBR_VALUE>>8);
+    DDRB=0x01;
+    UBRR0H = (unsigned char)(USART_UBBR_VALUE>>8);
     UBRR0L = (unsigned char) (USART_UBBR_VALUE);
 
     UCSR0C= 0b00000110;
@@ -90,6 +91,7 @@ uint8_t rx_address[5] = {0xE7,0xE7,0xE7,0xE7,0xE7};
 /* ------------------------------------------------------------------------- */
 int main()
 {
+
     /* init the software uart */
     uart_init();
 
@@ -110,9 +112,11 @@ int main()
 
     while(1)
     {
+
         if(nrf24_dataReady())
         {
             nrf24_getData(data_array);
+            if(data_array[0]=='a') PORTB^=0x01;
             sprintf(buffer,"enviado %2X,%2X,%2X,%2X\r\n",data_array[0],data_array[1],data_array[2],data_array[3]);
             enviar("> ");
             enviar(buffer);
