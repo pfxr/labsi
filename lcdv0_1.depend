@@ -26,3 +26,12 @@
 1396970677 /home/joao/Documentos/atmega/labsis/labsi/3310.h
 	<stdio.h>
 
+1397567286 source:/home/pedro/Documentos/LABSI/labsi/main.c
+	<avr/io.h>
+	<stdio.h>
+	<avr/interrupt.h>
+	"3310.h"
+
+1397567286 /home/pedro/Documentos/LABSI/labsi/3310.h
+	<stdio.h>
+
