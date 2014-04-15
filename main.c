@@ -27,6 +27,7 @@ void setup(void)
     OCR0A=194;
 
     TIMSK0|= 2;
+    inic_nrf();
     SREG |= 0x80;
 }
 
@@ -147,6 +148,7 @@ void inicio()
     cursorxy(0,3);
     putstr("Player 2: ");
     while((EIFR&&0b00000001)!=1);
+
     municoes=balas;
     clearram();
 
