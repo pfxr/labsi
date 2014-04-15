@@ -42,6 +42,7 @@ uint8_t nrf24_rxFifoEmpty();
 void    nrf24_send(char* value);
 void    nrf24_getData(char* data);
 
+
 /* use in dynamic length mode */
 uint8_t nrf24_payloadLength();
 
@@ -112,5 +113,6 @@ extern void nrf24_mosi_digitalWrite(uint8_t state);
 /* - returns: Non-zero if the pin is high */
 /* -------------------------------------------------------------------------- */
 extern uint8_t nrf24_miso_digitalRead();
+extern char enviar_nrf(char buffer[]);
 
 #endif

@@ -12,6 +12,7 @@
 * -----------------------------------------------------------------------------
 */
 #include "nrf24.h"
+#include<string.h>
 //Alteracao
 uint8_t payload_len;
 
@@ -381,4 +382,41 @@ void inic_nrf()
     /* Set the device addresses */
     nrf24_tx_address(tx_address);
     nrf24_rx_address(rx_address);
+}
+
+char enviar_nrf(char buffer[])
+{
+    char tamanho=0,i=0,temp;
+    char data_array[4];
+
+    tamanho=strlen(buffer);
+
+        /* Fill the data buffer */
+        while(i<=tamanho)
+        {
+            data_array[0] =buffer[i];
+            data_array[1] =buffer[i+1];
+            data_array[2] =buffer[i+2];
+            data_array[3] =buffer[i+3];
+            i=i+4;
+            /* Automatically goes to TX mode */
+            nrf24_send(data_array);
+
+            /* Wait for transmission to end */
+            while(nrf24_isSending());
+
+            /* Make analysis on last tranmission attempt */
+            temp = nrf24_lastMessageStatus();
+
+            if(temp == NRF24_MESSAGE_LOST)
+            {
+                return '1';
+            }
+        }
+        /* Retranmission count indicates the tranmission quality */
+
+
+        /* Optionally, go back to RX mode ... */
+        nrf24_powerUpRx();
+        return '0';
 }
