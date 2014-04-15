@@ -43,3 +43,25 @@
 	<string.h>
 	<util/delay.h>
 
+1397567286 source:/home/pedro/Documentos/LABSI/labsi/modulos_emteste/nrf24.c
+	"nrf24.h"
+
+1397567286 /home/pedro/Documentos/LABSI/labsi/modulos_emteste/nrf24.h
+	"nRF24L01.h"
+	<stdint.h>
+
+1397567286 /home/pedro/Documentos/LABSI/labsi/modulos_emteste/nRF24L01.h
+
+1397567286 source:/home/pedro/Documentos/LABSI/labsi/modulos_emteste/RX/main.c
+	<avr/io.h>
+	<stdint.h>
+	"../nrf24.h"
+	<avr/interrupt.h>
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	<util/delay.h>
+
+1397567286 source:/home/pedro/Documentos/LABSI/labsi/modulos_emteste/RX/radioPinFunctions.c
+	<avr/io.h>
+

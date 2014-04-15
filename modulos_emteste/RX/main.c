@@ -38,7 +38,7 @@ void uart_init()
 {
 
     DDRB=0x01;
-    DDRC=0x01;
+
 
     UBRR0H = (unsigned char)(USART_UBBR_VALUE>>8);
     UBRR0L = (unsigned char) (USART_UBBR_VALUE);
