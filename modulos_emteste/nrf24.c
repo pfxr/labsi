@@ -372,7 +372,7 @@ void inic_nrf()
 {
     uint8_t tx_address[5] = {0xD7,0xD7,0xD7,0xD7,0xD7};
     uint8_t rx_address[5] = {0xE7,0xE7,0xE7,0xE7,0xE7};
-    /* init hardware pins */
+    /* init hardwarepins */
     nrf24_init();
 
     /* Channel #2 , payload length: 4 */
