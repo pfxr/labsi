@@ -84,25 +84,10 @@ void processar_RX()
         PORTB&=~(1<<PB0);
     flag_rx=0;
 }
-
-/* ------------------------------------------------------------------------- */
-uint8_t temp;
-uint8_t q = 0;
-char data_array[4];
-uint8_t tx_address[5] = {0xD7,0xD7,0xD7,0xD7,0xD7};
-uint8_t rx_address[5] = {0xE7,0xE7,0xE7,0xE7,0xE7};
-/* ------------------------------------------------------------------------- */
-int main()
+void inic_nrf()
 {
-
-    /* init the software uart */
-    uart_init();
-
-
-
-    /* simple greeting message */
-    enviar("\r\n> RX device ready\r\n");
-
+    uint8_t tx_address[5] = {0xD7,0xD7,0xD7,0xD7,0xD7};
+    uint8_t rx_address[5] = {0xE7,0xE7,0xE7,0xE7,0xE7};
     /* init hardware pins */
     nrf24_init();
 
@@ -112,19 +97,27 @@ int main()
     /* Set the device addresses */
     nrf24_tx_address(tx_address);
     nrf24_rx_address(rx_address);
+}
+/* ------------------------------------------------------------------------- */
+uint8_t temp;
+uint8_t q = 0;
+char data_array[4];
+
+/* ------------------------------------------------------------------------- */
+int main()
+{
+    /* init the software uart */
+    uart_init();
+    inic_nrf();
 
     while(1)
     {
-
-
-
-            if(nrf24_dataReady())
-            {
-                PORTB^=0x01;
-                nrf24_getData(data_array);
-                 enviar(data_array);
+        if(nrf24_dataReady())
+        {
+            PORTB^=0x01;
+            nrf24_getData(data_array);
+            enviar(data_array);
         }
-
     }
 }
 
