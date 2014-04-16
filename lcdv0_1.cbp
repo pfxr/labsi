@@ -45,6 +45,14 @@
 		<Unit filename="main.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="nRF24L01.h" />
+		<Unit filename="nrf24.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="nrf24.h" />
+		<Unit filename="radioPinFunctions.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Extensions>
 			<code_completion />
 			<debugger />
