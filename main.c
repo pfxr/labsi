@@ -3,20 +3,39 @@
 #include <avr/interrupt.h>
 #include "3310.h"
 #include "nrf24.h"
+#include <string.h>
 
 #define balas 30
+
+#define FOSC 1000000
+#define F_CPU 1E6
+#define BAUD 2400
+#define USART_UBBR_VALUE FOSC/16/BAUD-1
+
+volatile unsigned char rx,flag_rx;
 
 volatile char frase[20];
 char nome[]="Joao";
 volatile char vida=100,flag=0,cont_20ms=6,cont_sing500ms=10,cont_reload=0,flag_reload;
 volatile int pisca=30,municoes=balas;
 
+void uart_init (void)
+{
+    UBRR0H = (unsigned char)(USART_UBBR_VALUE>>8);
+    UBRR0L = (unsigned char) (USART_UBBR_VALUE);
+
+    UCSR0C= 0b00000110;
+    UCSR0B= 0b00011000;
+    UCSR0B|=0x80;
+    SREG |= 0x80;
+}
+
 void setup(void)
 {
     DDRB=0b11011111;
     DDRC=0b00011111;
     initlcd();
-
+uart_init();
     EICRA=0b00001111;
     EIMSK=0x03;
     PCICR |=(1<<PCIE2);
@@ -28,8 +47,61 @@ void setup(void)
     OCR0A=194;
 
     TIMSK0|= 2;
-    inic_nrf();
+    //nrf_inic();
     SREG |= 0x80;
+}
+
+
+void enviar(char *Tx)
+{
+    int i=0;
+
+
+    while(i<=strlen(Tx))
+    {
+        while(!(UCSR0A & (1<<UDRE0)));
+        UDR0=Tx[i];
+        i++;
+    }
+
+
+
+}
+
+void nrf_enviar(char buffer[])
+{
+    char tamanho=0,i=0,flag_falha,data_array[4],temp;
+
+    tamanho=strlen(buffer);
+    /* Fill the data buffer */
+    while(i<=tamanho)
+    {
+        data_array[0]=buffer[i];
+        data_array[1]=buffer[i+1];
+        data_array[2]=buffer[i+2];
+        data_array[3]=buffer[i+3];
+        i=i+4;
+        /* Automatically goes to TX mode */
+        nrf24_send(data_array);
+
+        /* Wait for transmission to end */
+        while(nrf24_isSending());
+
+        /* Make analysis on last tranmission attempt */
+        temp = nrf24_lastMessageStatus();
+
+        if(temp == NRF24_TRANSMISSON_OK)
+        {
+            enviar("ok\r\n");
+        }
+        else if(temp == NRF24_MESSAGE_LOST)
+        {
+            enviar("NRF24_MESSAGE_LOST");
+        }
+    }
+
+    /* Optionally, go back to RX mode ... */
+    nrf24_powerUpRx();
 }
 
 ISR(TIMER0_COMPA_vect) //tempos
@@ -141,12 +213,29 @@ void printinic()
 }
 void inicio()
 {
+    uint8_t tx_address[5] = {0xE7,0xE7,0xE7,0xE7,0xE7};
+uint8_t rx_address[5] = {0xD7,0xD7,0xD7,0xD7,0xD7};
+
+enviar("\r\n> TX device ready\r\n");
+
+    /* init hardware pins */
+    nrf24_init();
+
+    /* Channel #2 , payload length: 4 */
+    nrf24_config(2,4);
+
+    /* Set the device addresses */
+    nrf24_tx_address(tx_address);
+    nrf24_rx_address(rx_address);
+
     char data_array[4];
     clearram();
     cursorxy(0,0);
     putstr("Dispare para  comecar");
-    while((EIFR&&0b00000001)!=1);
-    enviar_nrf("14");
+    enviar("comecei");
+   while((EIFR&&0b00000001)!=1);
+   //while((PIND&0b00000010)!=1);
+    nrf_enviar("14");
     while((data_array[0]!='3')&&(data_array[1]!='4'))
     {
         if(nrf24_dataReady())
@@ -197,6 +286,9 @@ void printmenu()
         }
     }
 }
+
+
+
 void gameover()
 {
     clearram();
@@ -210,6 +302,27 @@ void gameover()
     clearram();
     printmenu();
 
+}
+
+ISR (USART_RX_vect)
+{
+    rx=UDR0;
+    flag_rx=1;
+}
+
+void processar_RX()
+{
+    char buffer_Tx[200];
+
+    if(rx=='1')
+    {
+        PORTB|=(1<<PB0);
+        sprintf(buffer_Tx,"a");
+        enviar(buffer_Tx);
+    }
+    else
+        PORTB&=~(1<<PB0);
+    flag_rx=0;
 }
 
 int main(void)

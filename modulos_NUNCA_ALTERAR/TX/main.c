@@ -33,7 +33,7 @@ char buffer1[200];
 
 
 void uart_init()
-{
+{DDRD|=0x00;
 
     UBRR0H = (unsigned char)(USART_UBBR_VALUE>>8);
     UBRR0L = (unsigned char) (USART_UBBR_VALUE);
@@ -144,7 +144,8 @@ int main()
 
         /* Or you might want to power down after TX */
         // nrf24_powerDown();
-        nrf_enviar("johe e quartafeira esta bem");
+        if((PINB&0b00000001)==0b00000001)
+        {nrf_enviar("14");_delay_ms(1000);}
         /* Wait a little ... */
         _delay_ms(10);
     }
