@@ -78,7 +78,7 @@ void    nrf24_writeRegister(uint8_t reg, uint8_t* value, uint8_t len);
  *    - Set CE pin output     */
 /* -------------------------------------------------------------------------- */
 extern void nrf24_setupPins();
-
+extern void nrf_inic();
 /* -------------------------------------------------------------------------- */
 /* nrf24 CE pin control function
  *    - state:1 => Pin HIGH
@@ -112,5 +112,6 @@ extern void nrf24_mosi_digitalWrite(uint8_t state);
 /* - returns: Non-zero if the pin is high */
 /* -------------------------------------------------------------------------- */
 extern uint8_t nrf24_miso_digitalRead();
+
 
 #endif

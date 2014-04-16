@@ -85,6 +85,41 @@ char data_array[4];
 uint8_t tx_address[5] = {0xE7,0xE7,0xE7,0xE7,0xE7};
 uint8_t rx_address[5] = {0xD7,0xD7,0xD7,0xD7,0xD7};
 /* ------------------------------------------------------------------------- */
+void nrf_enviar(char buffer[])
+{
+    char tamanho=0,i=0,flag_falha,data_array[4],temp;
+
+    tamanho=strlen(buffer);
+    /* Fill the data buffer */
+    while(i<=tamanho)
+    {
+        data_array[0]=buffer[i];
+        data_array[1]=buffer[i+1];
+        data_array[2]=buffer[i+2];
+        data_array[3]=buffer[i+3];
+        i=i+4;
+        /* Automatically goes to TX mode */
+        nrf24_send(data_array);
+
+        /* Wait for transmission to end */
+        while(nrf24_isSending());
+
+        /* Make analysis on last tranmission attempt */
+        temp = nrf24_lastMessageStatus();
+
+        if(temp == NRF24_TRANSMISSON_OK)
+        {
+            enviar("ok");
+        }
+        else if(temp == NRF24_MESSAGE_LOST)
+        {
+            enviar("NRF24_MESSAGE_LOST");
+        }
+    }
+
+    /* Optionally, go back to RX mode ... */
+    nrf24_powerUpRx();
+}
 int main()
 {
     /* init the software uart */
@@ -106,46 +141,10 @@ int main()
     sprintf(buffer1,"a\r\n");
     while(1)
     {
-        int tamanho=0,i;
-        i=0;
-        tamanho=strlen(buffer1);
-        /* Fill the data buffer */
-        while(i<=tamanho)
-        {
-            data_array[0] =buffer1[i];
-            data_array[1] =buffer1[i+1];
-            data_array[2] =buffer1[i+2];
-            data_array[3] =buffer1[i+3];
-            i=i+4;
-            /* Automatically goes to TX mode */
-            nrf24_send(data_array);
-
-            /* Wait for transmission to end */
-            while(nrf24_isSending());
-
-            /* Make analysis on last tranmission attempt */
-            temp = nrf24_lastMessageStatus();
-
-            if(temp == NRF24_TRANSMISSON_OK)
-            {
-                enviar("> Tranmission went OK\r\n");
-            }
-            else if(temp == NRF24_MESSAGE_LOST)
-            {
-                enviar("> Message is lost ...\r\n");
-            }
-        }
-        /* Retranmission count indicates the tranmission quality */
-        temp = nrf24_retransmissionCount();
-        sprintf(buffer,"> Retranmission count: %d\r\n",temp);
-        enviar(buffer);
-
-        /* Optionally, go back to RX mode ... */
-        nrf24_powerUpRx();
 
         /* Or you might want to power down after TX */
         // nrf24_powerDown();
-
+        nrf_enviar("johe e quartafeira esta bem");
         /* Wait a little ... */
         _delay_ms(10);
     }

@@ -55,3 +55,32 @@
 	<string.h>
 	<util/delay.h>
 
+1397655406 source:/home/joao/Área de Trabalho/modulos_emteste/nrf24.c
+	"nrf24.h"
+	<string.h>
+
+1397655119 /home/joao/Área de Trabalho/modulos_emteste/nrf24.h
+	"nRF24L01.h"
+	<stdint.h>
+
+1397495114 /home/joao/Área de Trabalho/modulos_emteste/nRF24L01.h
+
+1397655935 source:/home/joao/Área de Trabalho/modulos_emteste/TX/main.c
+	<avr/io.h>
+	<stdint.h>
+	"../nrf24.h"
+	<avr/interrupt.h>
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	<util/delay.h>
+
+1397495114 source:/home/joao/Área de Trabalho/modulos_emteste/TX/radioPinFunctions.c
+	<avr/io.h>
+
+1397495114 source:/home/joao/Área de Trabalho/modulos_emteste/TX/util/xprintf.c
+	"xprintf.h"
+	<stdarg.h>
+
+1397495114 /home/joao/Área de Trabalho/modulos_emteste/TX/util/xprintf.h
+

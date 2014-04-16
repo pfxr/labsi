@@ -12,6 +12,7 @@
 * -----------------------------------------------------------------------------
 */
 #include "nrf24.h"
+#include <string.h>
 //Alteracao
 uint8_t payload_len;
 
@@ -161,16 +162,16 @@ void nrf24_send(char* value)
     nrf24_powerUpTx();
 
     /* Do we really need to flush TX fifo each time ? */
-    #if 1
-        /* Pull down chip select */
-        nrf24_csn_digitalWrite(LOW);
+#if 1
+    /* Pull down chip select */
+    nrf24_csn_digitalWrite(LOW);
 
-        /* Write cmd to flush transmit FIFO */
-        spi_transfer(FLUSH_TX);
+    /* Write cmd to flush transmit FIFO */
+    spi_transfer(FLUSH_TX);
 
-        /* Pull up chip select */
-        nrf24_csn_digitalWrite(HIGH);
-    #endif
+    /* Pull up chip select */
+    nrf24_csn_digitalWrite(HIGH);
+#endif
 
     /* Pull down chip select */
     nrf24_csn_digitalWrite(LOW);
@@ -272,7 +273,7 @@ uint8_t spi_transfer(uint8_t tx)
 
     nrf24_sck_digitalWrite(LOW);
 
-    for(i=0;i<8;i++)
+    for(i=0; i<8; i++)
     {
 
         if(tx & (1<<(7-i)))
@@ -302,7 +303,7 @@ void nrf24_transferSync1(uint8_t* dataout,uint8_t* datain,uint8_t len)
 {
     uint8_t i;
 
-    for(i=0;i<len;i++)
+    for(i=0; i<len; i++)
     {
         datain[i] = spi_transfer(dataout[i]);
     }
@@ -313,7 +314,7 @@ void nrf24_transferSync(char* dataout,char* datain,uint8_t len)
 {
     uint8_t i;
 
-    for(i=0;i<len;i++)
+    for(i=0; i<len; i++)
     {
         datain[i] = spi_transfer(dataout[i]);
     }
@@ -323,7 +324,7 @@ void nrf24_transmitSync1(uint8_t* dataout,uint8_t len)
 {
     uint8_t i;
 
-    for(i=0;i<len;i++)
+    for(i=0; i<len; i++)
     {
         spi_transfer(dataout[i]);
     }
@@ -334,7 +335,7 @@ void nrf24_transmitSync(char* dataout,uint8_t len)
 {
     uint8_t i;
 
-    for(i=0;i<len;i++)
+    for(i=0; i<len; i++)
     {
         spi_transfer(dataout[i]);
     }
@@ -367,3 +368,19 @@ void nrf24_writeRegister(uint8_t reg, uint8_t* value, uint8_t len)
     nrf24_transmitSync1(value,len);
     nrf24_csn_digitalWrite(HIGH);
 }
+void nrf_inic()
+{
+    uint8_t tx_address[5] = {0xD7,0xD7,0xD7,0xD7,0xD7};
+    uint8_t rx_address[5] = {0xE7,0xE7,0xE7,0xE7,0xE7};
+    /* init hardware pins */
+    nrf24_init();
+
+    /* Channel #2 , payload length: 4 */
+    nrf24_config(2,4);
+
+    /* Set the device addresses */
+    nrf24_tx_address(tx_address);
+    nrf24_rx_address(rx_address);
+}
+
+
