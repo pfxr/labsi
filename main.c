@@ -15,7 +15,7 @@
 #define player 1
 
 #define FOSC 1000000
-#define F_CPU 1E6
+#define F_CPU 1000000
 #define BAUD 2400
 #define USART_UBBR_VALUE FOSC/16/BAUD-1
 
