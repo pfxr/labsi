@@ -5,23 +5,20 @@
 #include <string.h>
 #include "../nrf24.h"
 
-#define FOSC 1000000
 #define pedro1 {0xD7,0xD7,0xD7,0xD7,0xD7}
 #define pedro2 {0xE7,0xE7,0xE7,0xE7,0xE7}
 #define joao1  {0xA7,0xA7,0xA7,0xA7,0xA7}
 #define joao2  {0xB7,0xB7,0xB7,0xB7,0xB7}
 
-
-#define F_CPU 1E6
-
+#define FOSC 1000000
+#define F_CPU 1000000
 #define BAUD 2400
 #define USART_UBBR_VALUE FOSC/16/BAUD-1
-volatile int cont=0;
+
 //char buffer_Tx[200];
 volatile unsigned char rx;
-char buffer1[200];
-char buffer[200];
-char data_array[4],cont_players=0;;
+
+char data_array[4],cont_players=0,buffer[40];;
 
 uint8_t rx_address[5] = joao1;
 uint8_t tx_address[5] = pedro1;
@@ -35,7 +32,7 @@ void init (void)
     UCSR0C= 0b00000110;
     UCSR0B= 0b00011000;
     UCSR0B|=0x80;
-    //nrf_inic();
+
     SREG |= 0x80;			//Autorizacao global das interrupcoes
 
 }
@@ -66,7 +63,7 @@ void enviar(char *Tx)
 
 void nrf_enviar(char buff[])
 {
-    int tamanho=0,i=0,temp;
+    char tamanho=0,i=0,temp;
     tamanho=strlen(buff);
     while(i<=tamanho)
     {
@@ -104,7 +101,7 @@ void nrf_enviar(char buff[])
 void processar_RX()
 {
     char buffer_Tx[4];
-    int i;
+    char i;
     enviar("Entrei no Rx\r\n");
     switch (rx)
     {
@@ -212,8 +209,6 @@ char dados_recebidos()
 
 int main(void)
 {
-
-
     init();
     nrf24_init();
     nrf24_config(2,4);
