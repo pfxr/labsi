@@ -316,7 +316,7 @@ void printmenu()
     if(municoes>0)
     {
         putstr("Municoes: ");
-        cursorxy(55,3);
+        cursorxy(55,2);
 
         putint(municoes);
     }
