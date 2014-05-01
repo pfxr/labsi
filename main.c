@@ -22,7 +22,6 @@
 
 volatile unsigned char rx,flag_rx;
 
-volatile char frase[20];
 char nome[15]="";
 volatile char vida=100,flag=0,cont_20ms=6,cont_sing500ms=10,cont_reload=0,flag_reload;
 volatile int pisca=30,municoes=balas;
