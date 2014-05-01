@@ -38,7 +38,6 @@ void uart_init (void)
     UCSR0C= 0b00000110;
     UCSR0B= 0b00011000;
     UCSR0B|=0x80;
-    SREG |= 0x80;
 }
 
 void setup(void)
@@ -58,32 +57,26 @@ void setup(void)
     OCR0A=194;
 
     TIMSK0|= 2;
-    //nrf_inic();
     SREG |= 0x80;
 }
 
 
 void enviar(char *Tx)
 {
-    int i=0;
+    char i=0;
 
-
-    while(i<=strlen(Tx))
+    while(i<strlen(Tx))
     {
         while(!(UCSR0A & (1<<UDRE0)));
         UDR0=Tx[i];
         i++;
     }
-
-
-
 }
 
 void nrf_receber()
 {
     if(nrf24_dataReady())
     {
-
         nrf24_getData(data_array);
         enviar(data_array);
     }
@@ -91,7 +84,8 @@ void nrf_receber()
 
 void nrf_enviar(char buff[])
 {
-    int tamanho=0,i=0;
+    char tamanho=0,i=0;
+
     tamanho=strlen(buff);
     while(i<=tamanho)
     {
@@ -166,7 +160,7 @@ ISR(TIMER0_COMPA_vect) //tempos
 
 ISR(INT0_vect) //disparo PD2 pino4
 {
-char buff[10];
+    char buff[10];
     if(cont_sing500ms==0 && municoes>0)
     {
         cont_sing500ms=10;
@@ -232,7 +226,7 @@ ISR(PCINT2_vect) // vida
 
 void printinic()
 {
-    int i=0;
+    char i=0;
     cursorxy(16,0);
     putstr("LASER TAG");
     cursorxy(4,2);
@@ -247,7 +241,6 @@ void printinic()
 void inicio()
 {
     char i,j=0;
-
 
     enviar("\r\n> TX device ready\r\n");
 
@@ -293,7 +286,7 @@ void inicio()
             nrf24_getData(data_array);
             for(j=0; j<=3; j++)
             {
-                  if(data_array[j]=='\n')
+                if(data_array[j]=='\n')
                     break;
                 nome[i]=data_array[j];
 
@@ -369,7 +362,7 @@ ISR (USART_RX_vect)
 
 void processar_RX()
 {
-    char buffer_Tx[200];
+    char buffer_Tx[40];
 
     if(rx=='1')
     {
