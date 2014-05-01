@@ -31,8 +31,8 @@ char data_array[4];
 uint8_t tx_address[5] = joao1;
 uint8_t rx_address[5] = pedro1;
 
-char buffer[200];
-char buffer1[200];
+char buffer[30];
+
 
 void uart_init (void)
 {
