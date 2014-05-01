@@ -22,17 +22,13 @@
 
 volatile unsigned char rx,flag_rx;
 
-char nome[15]="";
 volatile char vida=100,flag=0,cont_20ms=6,cont_sing500ms=10,cont_reload=0,flag_reload;
 volatile char pisca=30,municoes;
+char data_array[4],buffer[30],nome[15]="";;
 
 uint8_t temp;
-char data_array[4];
 uint8_t tx_address[5] = joao1;
 uint8_t rx_address[5] = pedro1;
-
-char buffer[30];
-
 
 void uart_init (void)
 {
