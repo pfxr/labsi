@@ -1,0 +1,8 @@
+# depslib dependency file v1.0
+1397146078 source:/home/joao/Documentos/atmega/USart/main.c
+	<avr/interrupt.h>
+	<util/delay.h>
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+
