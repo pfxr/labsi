@@ -24,7 +24,7 @@ volatile unsigned char rx,flag_rx;
 
 char nome[15]="";
 volatile char vida=100,flag=0,cont_20ms=6,cont_sing500ms=10,cont_reload=0,flag_reload;
-volatile int pisca=30,municoes=balas;
+volatile char pisca=30,municoes;
 
 uint8_t temp;
 char data_array[4];
