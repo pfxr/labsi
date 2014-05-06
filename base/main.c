@@ -18,7 +18,9 @@
 //char buffer_Tx[200];
 volatile unsigned char rx;
 
-char data_array[4],cont_players=0,buffer[40];;
+char data_array[4],cont_players=0,buffer[40],buffer_rx[15];
+
+volatile char cont_rx=0,StrRxFlag=0;
 
 uint8_t rx_address[5] = joao1;
 uint8_t tx_address[5] = pedro1;
@@ -65,7 +67,7 @@ void nrf_enviar(char buff[])
 {
     char tamanho=0,i=0,temp;
     tamanho=strlen(buff);
-    while(i<=tamanho)
+    while(i<tamanho)
     {
         data_array[0] =buff[i];
         data_array[1] =buff[i+1];
@@ -81,45 +83,45 @@ void nrf_enviar(char buff[])
 
         if(temp == NRF24_TRANSMISSON_OK)
         {
-            enviar("> Tranmission went OK\r\n");
+          //  enviar("> Tranmission went OK\r\n");
         }
         else if(temp == NRF24_MESSAGE_LOST)
         {
-            enviar("> Message is lost ...\r\n");
+            //enviar("> Message is lost ...\r\n");
         }
     }
 
     temp = nrf24_retransmissionCount();
     sprintf(buffer,"> Retranmission count: %d\r\n",temp);
-    enviar(buffer);
+  //  enviar(buffer);
 
     nrf24_powerUpRx();
 
 
     _delay_ms(10);
 }
-void processar_RX()
+void processar_RX(char rx[])
 {
-    char buffer_Tx[4];
+    char buffer_Tx[4],buff[10];
     char i;
-    enviar("Entrei no Rx\r\n");
-    switch (rx)
+   // enviar("Entrei no Rx\r\n");
+    switch (rx[0])
     {
     case '1':
     {
         nrf_enviar("34\r\n");
         do//Espera até que player1 ou player2 enviem '4' (inicio de jogo/disparo)
         {
-            enviar("estou a espera de receber14\r\n");
+        //    enviar("estou a espera de receber14\r\n");
             PORTB|=0x01;
             nrf_receber();
 
         }
         while(data_array[0]!='1');
-        enviar("estou a espera de receber1");
+      //  enviar("estou a espera de receber1");
         if((data_array[0]=='1') && (data_array[1]=='4'))
         {
-            enviar("estou a espera de receber14");
+          //  enviar("estou a espera de receber14");
             PORTB^=0x01;
             sprintf(buffer_Tx,"%c%c%c",data_array[0],data_array[1],'<');
             enviar(buffer_Tx);
@@ -132,7 +134,9 @@ void processar_RX()
     }
     case '2':
     {
-        nrf_enviar("13joaoca\n");
+        sprintf(buff,"13%s",(rx+1));
+        nrf_enviar(buff);
+       // enviar(buff);
         break;
     }
     }
@@ -143,8 +147,17 @@ void processar_RX()
 
 ISR (USART_RX_vect)
 {
-    rx=UDR0;
-    processar_RX();
+    buffer_rx[cont_rx]=UDR0;         //Read USART data register
+    if(buffer_rx[cont_rx++]=='\n')   //check for carriage return terminator and increment buffer index
+    {
+        // if terminator detected
+        StrRxFlag=1;        //Set String received flag
+        buffer[cont_rx-1]=0x00;   //Set string terminator to 0x00
+        cont_rx=0;                //Reset buffer index
+      //  enviar(buffer_rx);
+        processar_RX(buffer_rx);
+    }
+
 }
 
 void clear_dataarray()
@@ -212,6 +225,7 @@ int main(void)
     init();
     nrf24_init();
     nrf24_config(2,4);
+     buffer_rx[0]=0;
     nrf24_tx_address(tx_address);
     nrf24_rx_address(rx_address);
     enviar("Setup concluido");
