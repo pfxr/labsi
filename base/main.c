@@ -83,7 +83,7 @@ void nrf_enviar(char buff[])
 
         if(temp == NRF24_TRANSMISSON_OK)
         {
-          //  enviar("> Tranmission went OK\r\n");
+            //  enviar("> Tranmission went OK\r\n");
         }
         else if(temp == NRF24_MESSAGE_LOST)
         {
@@ -93,7 +93,7 @@ void nrf_enviar(char buff[])
 
     temp = nrf24_retransmissionCount();
     sprintf(buffer,"> Retranmission count: %d\r\n",temp);
-  //  enviar(buffer);
+    //  enviar(buffer);
 
     nrf24_powerUpRx();
 
@@ -104,7 +104,7 @@ void processar_RX(char rx[])
 {
     char buffer_Tx[4],buff[10];
     char i;
-   // enviar("Entrei no Rx\r\n");
+    // enviar("Entrei no Rx\r\n");
     switch (rx[0])
     {
     case '1':
@@ -112,15 +112,15 @@ void processar_RX(char rx[])
         nrf_enviar("34\r\n");
         do//Espera até que player1 ou player2 enviem '4' (inicio de jogo/disparo)
         {
-        //    enviar("estou a espera de receber14\r\n");
+            //    enviar("estou a espera de receber14\r\n");
             nrf_receber();
 
         }
         while(data_array[0]!='1');
-      //  enviar("estou a espera de receber1");
+        //  enviar("estou a espera de receber1");
         if((data_array[0]=='1') && (data_array[1]=='4'))
         {
-          //  enviar("estou a espera de receber14");
+            //  enviar("estou a espera de receber14");
             sprintf(buffer_Tx,"%c%c%c",data_array[0],data_array[1],'<');
             enviar(buffer_Tx);
         }
@@ -131,10 +131,11 @@ void processar_RX(char rx[])
         break;
     }
     case '2':
-    {PORTB=0x01;
+    {
+        PORTB=0x01;
         sprintf(buff,"13%s",(rx+1));
         nrf_enviar(buff);
-       // enviar(buff);
+        // enviar(buff);
         break;
     }
     }
@@ -149,37 +150,54 @@ ISR (USART_RX_vect)
     if(buffer_rx[cont_rx]=='\n')   //check for carriage return terminator and increment buffer index
     {
         // if terminator detected
-       //Set String received flag
+        //Set String received flag
         //buffer_rx[cont_rx-1]=0x00;   //Set string terminator to 0x00
         cont_rx=0;                //Reset buffer index
-      //  enviar(buffer_rx);
+        //  enviar(buffer_rx);
         processar_RX(buffer_rx);//enviar(buffer_rx);
         buffer_rx[0]='\0';
 
-    }else cont_rx++;
+    }
+    else cont_rx++;
 
 }
 
 void clear_dataarray()
 {
     char i=0;
-    for(i=0; i<strlen(data_array); i++)
+    for(i=0; i<4; i++)
         data_array[i]='0';
 }
-/*
-char dados_recebidos()
+
+void dados_recebidos()
 {
     char buff[10];
-    nrf_receber();
-    if(data_array[0]!='0')
+    clear_dataarray();
+    while(data_array[0]=='0')
     {
-        sprintf(buff,"%c%c%c%c\r\n",data_array[0],data_array[1],data_array[2],data_array[3]);//pode haver problema aqui
-        enviar(buff);
-          clear_dataarray();
+        nrf_receber();
+    }
+    switch(data_array[0])
+    {
+    case '1':
+    {
+        if(data_array[1]=='1')
+        {
+            sprintf(buff,"11%c%c<",data_array[2],data_array[3]);
+            enviar(buff);
+        }
+        else
+        {
+            if(data_array[1]=='2')
+            {
+                sprintf(buff,"vida %c%c\r\n",data_array[2],data_array[3]);
+                enviar(buff);
+            }
+        }
+        break;
     }
 
-    /*{
-    case '1':
+    case '2':
     {
         if(data_array[1]=='1')
         {
@@ -197,42 +215,23 @@ char dados_recebidos()
         clear_dataarray();
         break;
     }
+    }
 
-    case '2':
-    {
-         if(data_array[1]=='1')
-        {
-            sprintf(buff,"municoes %c%c\r\n",data_array[2],data_array[3]);
-            enviar(buff);
-        }
-        else
-        {
-            if(data_array[1]=='2')
-            {
-                sprintf(buff,"vida %c%c\r\n",data_array[2],data_array[3]);
-                enviar(buff);
-            }
-        }
-        clear_dataarray();
-        break;
-    }
-    }
-    return '1';
-}*/
+}
 
 int main(void)
 {
     init();
     nrf24_init();
     nrf24_config(2,4);
-     buffer_rx[0]=0;
+    buffer_rx[0]=0;
     nrf24_tx_address(tx_address);
     nrf24_rx_address(rx_address);
     enviar("Setup concluido");
     clear_dataarray();
     while(1)
     {
-        //  dados_recebidos();
+        dados_recebidos();
     }
 }
 
