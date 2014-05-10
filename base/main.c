@@ -113,7 +113,6 @@ void processar_RX(char rx[])
         do//Espera até que player1 ou player2 enviem '4' (inicio de jogo/disparo)
         {
         //    enviar("estou a espera de receber14\r\n");
-            PORTB|=0x01;
             nrf_receber();
 
         }
@@ -122,7 +121,6 @@ void processar_RX(char rx[])
         if((data_array[0]=='1') && (data_array[1]=='4'))
         {
           //  enviar("estou a espera de receber14");
-            PORTB^=0x01;
             sprintf(buffer_Tx,"%c%c%c",data_array[0],data_array[1],'<');
             enviar(buffer_Tx);
         }
@@ -133,7 +131,7 @@ void processar_RX(char rx[])
         break;
     }
     case '2':
-    {
+    {PORTB=0x01;
         sprintf(buff,"13%s",(rx+1));
         nrf_enviar(buff);
        // enviar(buff);
@@ -148,15 +146,17 @@ void processar_RX(char rx[])
 ISR (USART_RX_vect)
 {
     buffer_rx[cont_rx]=UDR0;         //Read USART data register
-    if(buffer_rx[cont_rx++]=='\n')   //check for carriage return terminator and increment buffer index
+    if(buffer_rx[cont_rx]=='\n')   //check for carriage return terminator and increment buffer index
     {
         // if terminator detected
-        StrRxFlag=1;        //Set String received flag
-        buffer[cont_rx-1]=0x00;   //Set string terminator to 0x00
+       //Set String received flag
+        //buffer_rx[cont_rx-1]=0x00;   //Set string terminator to 0x00
         cont_rx=0;                //Reset buffer index
       //  enviar(buffer_rx);
-        processar_RX(buffer_rx);
-    }
+        processar_RX(buffer_rx);//enviar(buffer_rx);
+        buffer_rx[0]='\0';
+
+    }else cont_rx++;
 
 }
 
