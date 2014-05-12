@@ -84,11 +84,11 @@ void nrf_enviar(char buff[])
 
         if(temp == NRF24_TRANSMISSON_OK)
         {
-              enviar("> Tranmission went OK\r\n");
+              //enviar("> Tranmission went OK\r\n");
         }
         else if(temp == NRF24_MESSAGE_LOST)
         {
-            enviar("> Message is lost ...\r\n");
+           // enviar("> Message is lost ...\r\n");
         }
     }
 
@@ -110,7 +110,7 @@ void processar_RX(char rx[])
     switch (rx[0])
     {
     case '1':
-    {   enviar("entrei no case1");
+    {   //enviar("entrei no case1");
         nrf_enviar("34\r\n");
         do//Espera até que player1 ou player2 enviem '4' (inicio de jogo/disparo)
         {
