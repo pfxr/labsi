@@ -25,18 +25,55 @@ namespace labsi
             panel3.Hide();
             panel1.Show();
         }
+        private void panel3_Paint(object sender, PaintEventArgs e)
+        {
 
+
+            /*serial.Write("v");
+            string vida1=serial.ReadTo("<");
+            string vida2 = serial.ReadTo("<");
+            serial.Write("r");
+            string resultado1 = serial.ReadTo("<");
+            string resultado2 = serial.ReadTo("<");
+            if ((vida1[0] & vida2[0]) != '0')
+            {
+
+                progressBar1.Value = int.Parse(vida1);
+                progressBar2.Value = int.Parse(vida2);
+
+            }
+            else
+            {
+                panel3.Hide();
+                panel2.Show();
+            }
+            label9.Text = resultado1;
+            label10.Text = resultado2;
+            if (int.Parse(resultado1) > int.Parse(resultado2))
+            {
+                label9.ForeColor = System.Drawing.Color.Green;
+                label10.ForeColor = System.Drawing.Color.Red;
+            }
+            else
+            {
+                label9.ForeColor = System.Drawing.Color.Red;
+                label10.ForeColor = System.Drawing.Color.Green;
+            }*/
+            // serial.Close();
+
+        }
         private void button1_Click_1(object sender, EventArgs e)
         {
             try
             {
                 string ret;
+             
                 int prontos = 0;
 
                 if ((textBox1.TextLength != 0) && (textBox2.TextLength != 0))
                 {
                     if (textBox1.TextLength < 6 && textBox2.TextLength < 6)
-                    {
+                    {  
                         jogador1 = textBox1.Text;
                         jogador2 = textBox2.Text;
                         label12.Text = ("jogador 1:  "+jogador1);
@@ -75,8 +112,33 @@ namespace labsi
                         label8.Text = jogador2;
                         panel2.Hide();
                         panel3.Show();
-                        System.Threading.Thread.Sleep(500);
+                 //       System.Threading.Thread.Sleep(500);
+                        string reto;
+                        int pont=0;
+                        while(pont==0)
+                        {
+                            
+                            reto = serial.ReadTo("<");
+                            label20.Text =reto;
+                            if (reto[0] == '1')
+                            {pont=1;
+                                label24.Text = "ola1";
+                                if (reto[1] == '1')
+                                {
+                                    label24.Text = "ola2";
+                                    string str = reto.Substring(2, 2);
+                                    int valor = Convert.ToInt32(str);
+                                    string str2 = Convert.ToString(valor);
+                                    label24.Text =str2;
+                                    progressBar3.Value = valor;
+                                }
+                            }
+                            else
+                            {
 
+                            }
+
+                        }
                        
 
                        
@@ -134,43 +196,7 @@ namespace labsi
 
         }
 
-        private void panel3_Paint(object sender, PaintEventArgs e)
-        {
-            
-            
-            /*serial.Write("v");
-            string vida1=serial.ReadTo("<");
-            string vida2 = serial.ReadTo("<");
-            serial.Write("r");
-            string resultado1 = serial.ReadTo("<");
-            string resultado2 = serial.ReadTo("<");
-            if ((vida1[0] & vida2[0]) != '0')
-            {
-
-                progressBar1.Value = int.Parse(vida1);
-                progressBar2.Value = int.Parse(vida2);
-
-            }
-            else
-            {
-                panel3.Hide();
-                panel2.Show();
-            }
-            label9.Text = resultado1;
-            label10.Text = resultado2;
-            if (int.Parse(resultado1) > int.Parse(resultado2))
-            {
-                label9.ForeColor = System.Drawing.Color.Green;
-                label10.ForeColor = System.Drawing.Color.Red;
-            }
-            else
-            {
-                label9.ForeColor = System.Drawing.Color.Red;
-                label10.ForeColor = System.Drawing.Color.Green;
-            }*/
-            serial.Close();
-           
-        }
+   
 
 
         private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
@@ -196,9 +222,6 @@ namespace labsi
 
         }
 
-      
-
-       
 
 
 
