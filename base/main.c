@@ -65,6 +65,7 @@ void enviar(char *Tx)
 
 void nrf_enviar(char buff[])
 {
+
     char tamanho=0,i=0,temp;
     tamanho=strlen(buff);
     while(i<tamanho)
@@ -83,11 +84,11 @@ void nrf_enviar(char buff[])
 
         if(temp == NRF24_TRANSMISSON_OK)
         {
-            //  enviar("> Tranmission went OK\r\n");
+              enviar("> Tranmission went OK\r\n");
         }
         else if(temp == NRF24_MESSAGE_LOST)
         {
-            //enviar("> Message is lost ...\r\n");
+            enviar("> Message is lost ...\r\n");
         }
     }
 
@@ -99,6 +100,7 @@ void nrf_enviar(char buff[])
 
 
     _delay_ms(10);
+     enviar("nrf a enviar\r\n");
 }
 void processar_RX(char rx[])
 {
@@ -108,7 +110,7 @@ void processar_RX(char rx[])
     switch (rx[0])
     {
     case '1':
-    {
+    {   enviar("entrei no case1");
         nrf_enviar("34\r\n");
         do//Espera até que player1 ou player2 enviem '4' (inicio de jogo/disparo)
         {
@@ -183,7 +185,7 @@ void dados_recebidos()
     {
         if(data_array[1]=='1')
         {
-            sprintf(buff,"11%c%c<",data_array[2],data_array[3]);
+            sprintf(buff,"%c%c%c%c%c",data_array[0],data_array[1],data_array[2],data_array[3],'<');
             enviar(buff);
         }
         else
