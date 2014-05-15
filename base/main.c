@@ -10,9 +10,9 @@
 #define joao1  {0xA7,0xA7,0xA7,0xA7,0xA7}
 #define joao2  {0xB7,0xB7,0xB7,0xB7,0xB7}
 
-#define FOSC 1000000
-#define F_CPU 1000000
-#define BAUD 2400
+#define FOSC 8000000
+#define F_CPU 8000000
+#define BAUD 9600
 #define USART_UBBR_VALUE FOSC/16/BAUD-1
 
 //char buffer_Tx[200];
@@ -100,11 +100,11 @@ void nrf_enviar(char buff[])
 
 
     _delay_ms(10);
-     enviar("nrf a enviar\r\n");
+    // enviar("nrf a enviar\r\n");
 }
 void processar_RX(char rx[])
 {
-    char buffer_Tx[4],buff[10];
+    char buffer_Tx[10],buff[10];
     char i;
     // enviar("Entrei no Rx\r\n");
     switch (rx[0])
@@ -123,7 +123,7 @@ void processar_RX(char rx[])
         if((data_array[0]=='1') && (data_array[1]=='4'))
         {
             //  enviar("estou a espera de receber14");
-            sprintf(buffer_Tx,"%c%c%c",data_array[0],data_array[1],'<');
+            sprintf(buffer_Tx,"%c%c32%c",data_array[0],data_array[1],'<');
             enviar(buffer_Tx);
         }
         for (i=0; i<strlen(buffer_Tx); i++)
