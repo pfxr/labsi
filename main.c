@@ -24,7 +24,8 @@ volatile unsigned char rx,flag_rx;
 
 volatile char vida=100,flag=0,cont_20ms=6,cont_sing500ms=10,cont_reload=0,flag_reload;
 volatile char pisca=30,municoes;
-char data_array[4],buffer[30],nome[15]="joao",vida2[2];
+char data_array[4],buffer[30],nome[15]="joao";
+char vida2=100;
 
 uint8_t temp;
 uint8_t tx_address[5] = joao1;
@@ -45,7 +46,7 @@ void setup(void)
     DDRB=0b11011111;
     DDRC|=0b00011111;
     initlcd();
-    uart_init();
+    //uart_init();
     EICRA=0b00001111;
     EIMSK=0x03;
     PCICR |=(1<<PCIE2);
@@ -107,6 +108,10 @@ void nrf_enviar(char buff[])
         {
             enviar("Tranmission went OK\r\nenviei");
             enviar(buff);
+            PORTB^=(1<<PB0);
+            delay_ms(100);
+            PORTB^=(1<<PB0);
+
         }
         else if(temp == NRF24_MESSAGE_LOST)
         {
@@ -147,11 +152,11 @@ ISR(TIMER0_COMPA_vect) //tempos
         PORTB&=~(1<<PB7);
     if(flag_reload==1) //precisa de reload
     {
-        PORTB|=(1<<PB0);
+        // PORTB|=(1<<PB0);
         cont_reload--;
         if(cont_reload==0)
         {
-            PORTB&=~(1<<PB0);
+            //  PORTB&=~(1<<PB0);
             municoes=balas;
             flag_reload=0;
         }
@@ -344,7 +349,11 @@ void printmenu()
     }
     cursorxy(0,4);
     putstr("Vida2: ");
-    putstr(vida2);
+    putint(vida2);
+    if(vida2<100)
+        putstr("% ");
+    else
+        putstr("%");
 }
 
 
@@ -353,10 +362,14 @@ void gameover()
 {
     clearram();
     cursorxy(16,0);
-    putstr("GAME OVER");
+    if(vida2==0)
+        putstr("YOU WIN!!");
+    else
+        putstr("Game Over");
     cursorxy(0,3);
     putstr("Dispara para  recomecar...");
-    delay_ms(3000);
+    while((EIFR&&0b00000001)!=1);
+
     municoes=balas;
     vida=100;
     clearram();
@@ -376,20 +389,20 @@ void processar_RX()
 
     if(rx=='1')
     {
-        PORTB|=(1<<PB0);
+        //PORTB|=(1<<PB0);
         sprintf(buffer_Tx,"a");
         enviar(buffer_Tx);
     }
     else
-        PORTB&=~(1<<PB0);
-    flag_rx=0;
+        // PORTB&=~(1<<PB0);
+        flag_rx=0;
 }
 
 void clear_data()
 {
     char i=0;
-    for(i=0;i<4;i++)
-    data_array[i]='0';
+    for(i=0; i<4; i++)
+        data_array[i]='0';
 }
 
 int main(void)
@@ -406,9 +419,11 @@ int main(void)
         clear_data();
         nrf_receber();
         if(data_array[0]!='0')
-            {
-                sprintf(vida2,"%c%c",data_array[0],data_array[1]);
-            }
+        {
+            vida2=data_array[0];
+            if(vida2==0)
+                gameover();
+        }
     }
     return 0;
 }
