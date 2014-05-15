@@ -22,9 +22,9 @@
 
 volatile unsigned char rx,flag_rx;
 
-volatile char vida=100,vida2=100,flag=0,cont_20ms=6,cont_sing500ms=10,cont_reload=0,flag_reload;
+volatile char vida=100,flag=0,cont_20ms=6,cont_sing500ms=10,cont_reload=0,flag_reload;
 volatile char pisca=30,municoes;
-char data_array[4],buffer[30],nome[15]="joao";
+char data_array[4],buffer[30],nome[15]="joao",vida2[2];
 
 uint8_t temp;
 uint8_t tx_address[5] = joao1;
@@ -203,8 +203,8 @@ ISR(PCINT2_vect) // vida
             if(vida>0)
             {
                 vida=vida-40;
-                    sprintf(vida_tx,"%c",vida);
-            nrf_enviar(vida_tx);
+                sprintf(vida_tx,"%c",vida);
+                nrf_enviar(vida_tx);
                 PORTB^=(1<<PB6);
             }
         }
@@ -217,8 +217,8 @@ ISR(PCINT2_vect) // vida
                 if(vida>0)
                 {
                     vida=vida-20;
-                        sprintf(vida_tx,"%c",vida);
-            nrf_enviar(vida_tx);
+                    sprintf(vida_tx,"%c",vida);
+                    nrf_enviar(vida_tx);
                     PORTB^=(1<<PB6);
                 }
             }
@@ -262,46 +262,46 @@ void inicio()
     nrf24_rx_address(rx_address);
     clearram();
     cursorxy(0,0);
-   // putstr("A espera 34");
-   // while((data_array[0]!='3')&&(data_array[1]!='4'))//codigo para a base confirmar que pode inicar o jogo
+    // putstr("A espera 34");
+    // while((data_array[0]!='3')&&(data_array[1]!='4'))//codigo para a base confirmar que pode inicar o jogo
     //{
-     //   nrf_receber();
-  //  }
+    //   nrf_receber();
+    //  }
     clearram();
     cursorxy(0,0);
     putstr("Dispare para  comecar");
     while((EIFR&&0b00000001)!=1);
-   // sprintf(buffer,"%d4\r\n",player);
-  //  nrf_enviar(buffer);
+    // sprintf(buffer,"%d4\r\n",player);
+    //  nrf_enviar(buffer);
     clearram();
     cursorxy(0,0);
-  //  putstr("enviei14 espero receber1");
-  //  do
-  //  {
-  //      nrf_receber();
-   // }
-   // while((data_array[0]!=player)&&(data_array[1]!='3'));
-  //  putstr("passei");
-   // clearram();
-   // nome[0]=data_array[2];
-   // nome[1]=data_array[3];
-   /* i=2;
-    while(data_array[j]!='\n')
-    {
-        if(nrf24_dataReady())
-        {
-            nrf24_getData(data_array);
-            for(j=0; j<=3; j++)
-            {
-                if(data_array[j]=='\n')
-                    break;
-                nome[i]=data_array[j];
+    //  putstr("enviei14 espero receber1");
+    //  do
+    //  {
+    //      nrf_receber();
+    // }
+    // while((data_array[0]!=player)&&(data_array[1]!='3'));
+    //  putstr("passei");
+    // clearram();
+    // nome[0]=data_array[2];
+    // nome[1]=data_array[3];
+    /* i=2;
+     while(data_array[j]!='\n')
+     {
+         if(nrf24_dataReady())
+         {
+             nrf24_getData(data_array);
+             for(j=0; j<=3; j++)
+             {
+                 if(data_array[j]=='\n')
+                     break;
+                 nome[i]=data_array[j];
 
-                i++;
-            }
-        }
-    }
-   */ enviar(nome);
+                 i++;
+             }
+         }
+     }
+    */ enviar(nome);
     vida=100;
     municoes=balas;
     clearram();
@@ -344,7 +344,7 @@ void printmenu()
     }
     cursorxy(0,4);
     putstr("Vida2: ");
-    putint(vida2);
+    putstr(vida2);
 }
 
 
@@ -385,15 +385,30 @@ void processar_RX()
     flag_rx=0;
 }
 
+void clear_data()
+{
+    char i=0;
+    for(i=0;i<4;i++)
+    data_array[i]='0';
+}
+
 int main(void)
 {
+
     setup();
     printinic();
     inicio();
+
     while(1)
     {
         if(vida>0)printmenu();
         else gameover();
+        clear_data();
+        nrf_receber();
+        if(data_array[0]!='0')
+            {
+                sprintf(vida2,"%c%c",data_array[0],data_array[1]);
+            }
     }
     return 0;
 }
