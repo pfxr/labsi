@@ -424,8 +424,10 @@ int main(void)
         {
             vida2=data_array[0];
             if(vida2==0)
+            {
                 //vida2=100;
                 gameover();
+            }
         }
     }
     return 0;
