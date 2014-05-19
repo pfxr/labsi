@@ -28,8 +28,8 @@ char data_array[4],buffer[30],nome[15]="Pedro";
 char vida2=100;
 
 uint8_t temp;
-uint8_t tx_address[5] = joao1;
-uint8_t rx_address[5] = pedro1;
+uint8_t rx_address[5] = joao1;
+uint8_t tx_address[5] = pedro1;
 
 void uart_init (void)
 {
@@ -369,8 +369,8 @@ void gameover()
         putstr("Game Over");
     if(flag_head==1)
     {
-        cursorxy(10,2);
-        putstr("HEADSHOT!!!");
+        cursorxy(8,2);
+        putstr("@ HEADSHOT!!!");
         flag_head=0;
     }
 
