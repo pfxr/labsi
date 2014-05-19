@@ -23,13 +23,13 @@
 volatile unsigned char rx,flag_rx;
 
 volatile char vida=100,flag=0,cont_20ms=6,cont_sing500ms=10,cont_reload=0,flag_reload;
-volatile char pisca=30,municoes;
+volatile char pisca=30,municoes,flag_head=0;
 char data_array[4],buffer[30],nome[15]="Pedro";
 char vida2=100;
 
 uint8_t temp;
-uint8_t rx_address[5] = joao1;
-uint8_t tx_address[5] = pedro1;
+uint8_t tx_address[5] = joao1;
+uint8_t rx_address[5] = pedro1;
 
 void uart_init (void)
 {
@@ -171,7 +171,7 @@ ISR(INT0_vect) //disparo PD2 pino4
         cont_sing500ms=10;
         municoes--;
         sprintf(buff,"%d1%d",player,municoes);
-        nrf_enviar(buff);
+        //  nrf_enviar(buff);
 
         PORTB|=(1<<PB7); //pino 10
     }
@@ -194,7 +194,7 @@ ISR(PCINT2_vect) // vida
         if(vida>0)
         {
             vida=vida-80;
-            sprintf(vida_tx,"%c",vida);
+            sprintf(vida_tx,"%c1",vida);
             nrf_enviar(vida_tx);
             PORTB^=(1<<PB6);
         }
@@ -276,6 +276,7 @@ void inicio()
     cursorxy(0,0);
     putstr("Dispare para  comecar");
     while((EIFR&&0b00000001)!=1);
+    delay_ms(100);
     // sprintf(buffer,"%d4\r\n",player);
     //  nrf_enviar(buffer);
     clearram();
@@ -362,16 +363,24 @@ void gameover()
 {
     clearram();
     cursorxy(16,0);
-    if(vida2==0)
+    if(vida2<=0)
         putstr("YOU WIN!!");
     else
         putstr("Game Over");
-    cursorxy(0,3);
+    if(flag_head==1)
+    {
+        cursorxy(10,2);
+        putstr("HEADSHOT!!!");
+        flag_head=0;
+    }
+
+    cursorxy(0,4);
     putstr("Dispara para  recomecar...");
+    while((EIFR&&0b00000001)!=1);
+    delay_ms(100);
     vida2=100;
     municoes=balas;
     vida=100;
-    while((EIFR&&0b00000001)!=1);
 
     clearram();
     printmenu();
@@ -416,16 +425,19 @@ int main(void)
 
     while(1)
     {
-        if(vida>0)printmenu();
-        else gameover();
+        if(vida>0)
+            printmenu();
+        else
+            gameover();
         clear_data();
         nrf_receber();
         if(data_array[0]!='a')
         {
             vida2=data_array[0];
-            if(vida2==0)
+            if(vida2<=0)
             {
-                //vida2=100;
+                if(data_array[1]=='1')
+                    flag_head=1;
                 gameover();
             }
         }
