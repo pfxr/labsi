@@ -24,12 +24,12 @@ volatile unsigned char rx,flag_rx;
 
 volatile char vida=100,flag=0,cont_20ms=6,cont_sing500ms=10,cont_reload=0,flag_reload;
 volatile char pisca=30,municoes;
-char data_array[4],buffer[30],nome[15]="joao";
+char data_array[4],buffer[30],nome[15]="Pedro";
 char vida2=100;
 
 uint8_t temp;
-uint8_t tx_address[5] = joao1;
-uint8_t rx_address[5] = pedro1;
+uint8_t rx_address[5] = joao1;
+uint8_t tx_address[5] = pedro1;
 
 void uart_init (void)
 {
@@ -368,12 +368,14 @@ void gameover()
         putstr("Game Over");
     cursorxy(0,3);
     putstr("Dispara para  recomecar...");
-    while((EIFR&&0b00000001)!=1);
-
+    vida2=100;
     municoes=balas;
     vida=100;
+    while((EIFR&&0b00000001)!=1);
+
     clearram();
     printmenu();
+
 
 }
 
@@ -402,7 +404,7 @@ void clear_data()
 {
     char i=0;
     for(i=0; i<4; i++)
-        data_array[i]='0';
+        data_array[i]='a';
 }
 
 int main(void)
@@ -418,10 +420,11 @@ int main(void)
         else gameover();
         clear_data();
         nrf_receber();
-        if(data_array[0]!='0')
+        if(data_array[0]!='a')
         {
             vida2=data_array[0];
             if(vida2==0)
+                //vida2=100;
                 gameover();
         }
     }
