@@ -315,8 +315,8 @@ void inicio()
 }
 void printmenu()
 {
-    cursorxy(0,0);
-    putstr("Player: ");
+    cursorxy(16,0);
+    //putstr("Player: ");
     putstr(nome);
     cursorxy(0,1);
     putstr("Vida: ");
@@ -349,7 +349,7 @@ void printmenu()
         }
     }
     cursorxy(0,4);
-    putstr("Vida2: ");
+    putstr("Joao: ");
     putint(vida2);
     if(vida2<100)
         putstr("% ");
