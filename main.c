@@ -146,10 +146,10 @@ ISR(TIMER0_COMPA_vect) //tempos
     }
     if(cont_sing500ms>0)
         cont_sing500ms--;
-    if(cont_sing500ms>2)
+    /*if(cont_sing500ms>2)
         PORTB^=(1<<PB7);
     if(cont_sing500ms==2)
-        PORTB&=~(1<<PB7);
+        PORTB&=~(1<<PB7);*/
     if(flag_reload==1) //precisa de reload
     {
         // PORTB|=(1<<PB0);
@@ -165,15 +165,41 @@ ISR(TIMER0_COMPA_vect) //tempos
 
 ISR(INT0_vect) //disparo PD2 pino4
 {
-    char buff[10];
+     /* char buff[10];
+     if(cont_sing500ms==0 && municoes>0)
+     {
+         cont_sing500ms=10;
+         municoes--;
+         sprintf(buff,"%d1%d",player,municoes);
+         //  nrf_enviar(buff);
+
+         PORTB|=(1<<PB7); //pino 10
+     }*/
+    char pulse=14,i;
+
     if(cont_sing500ms==0 && municoes>0)
     {
         cont_sing500ms=10;
         municoes--;
-        sprintf(buff,"%d1%d",player,municoes);
-        //  nrf_enviar(buff);
+        for(i=0; i<16; i++)
+        {
+            PORTB|=(1<<PB7);
+            _delay_us(pulse);
+            PORTB&=~(1<<PB7);
+            _delay_us(pulse);
+        }
 
-        PORTB|=(1<<PB7); //pino 10
+
+        _delay_us(7330);
+
+        //send second 16 bursts
+        for(i=0; i<16; i++)
+        {
+            PORTB|=(1<<PB7);
+            _delay_us(pulse);
+            PORTB&=~(1<<PB7);
+            _delay_us(pulse);
+        }
     }
 }
 
