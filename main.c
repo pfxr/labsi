@@ -28,8 +28,8 @@ char data_array[4],buffer[30],nome[15]="Pedro";
 char vida2=100,ganho=0,perco=0,headshots=0,headshots2=0;
 
 uint8_t temp;
-uint8_t tx_address[5] = joao1;
-uint8_t rx_address[5] = pedro1;
+uint8_t rx_address[5] = joao1;
+uint8_t tx_address[5] = pedro1;
 
 void uart_init (void)
 {
@@ -165,16 +165,16 @@ ISR(TIMER0_COMPA_vect) //tempos
 
 ISR(INT0_vect) //disparo PD2 pino4
 {
-     /* char buff[10];
-     if(cont_sing500ms==0 && municoes>0)
-     {
-         cont_sing500ms=10;
-         municoes--;
-         sprintf(buff,"%d1%d",player,municoes);
-         //  nrf_enviar(buff);
+    /* char buff[10];
+    if(cont_sing500ms==0 && municoes>0)
+    {
+        cont_sing500ms=10;
+        municoes--;
+        sprintf(buff,"%d1%d",player,municoes);
+        //  nrf_enviar(buff);
 
-         PORTB|=(1<<PB7); //pino 10
-     }*/
+        PORTB|=(1<<PB7); //pino 10
+    }*/
     char pulse=14,i,j;
 
     if(cont_sing500ms==0 && municoes>0)
@@ -359,9 +359,10 @@ void printmenu()
     cursorxy(0,2);
     if(municoes>0)
     {
-        putstr("Municoes: ");
-        cursorxy(55,2);
-
+        if(municoes>=10)
+            putstr("Municoes: ");
+        else
+            putstr("Municoes:  ");
         putint(municoes);
     }
     else
