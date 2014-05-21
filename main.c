@@ -22,11 +22,11 @@
 
 volatile unsigned char rx,flag_rx;
 
-volatile char vida=100,flag=0,cont_20ms=6,cont_sing500ms=10,cont_reload=0,flag_reload;
-volatile char pisca=30,municoes,flag_head=0;
+volatile char vida=100,flag=0,cont_20ms=6,cont_sing500ms=10,cont300ms=6,cont_reload=0,flag_reload;
+volatile char pisca=30,municoes,flag_head=0,multi=0,flag_single=0;
 char data_array[4],buffer[30],nome[15]="Pedro";
 char vida2=100,ganho=0,perco=0,headshots=0,headshots2=0;
-
+volatile int x;
 uint8_t temp;
 uint8_t rx_address[5] = joao1;
 uint8_t tx_address[5] = pedro1;
@@ -47,12 +47,13 @@ void setup(void)
     DDRC|=0b00011111;
     initlcd();
     //uart_init();
-    EICRA=0b00001111;
+    EICRA=0b00001101;
     EIMSK=0x03;
     PCICR |=(1<<PCIE2);
     PCMSK2 |=(1<<PCINT17);
     PCMSK2 |=(1<<PCINT21);
     PCMSK2 |=(1<<PCINT16);
+    PCMSK2 |=(1<<PCINT20);
     TCCR0A=0b00000010;
     TCCR0B=0b00000100;
     OCR0A=194;
@@ -135,6 +136,7 @@ void nrf_enviar(char buff[])
 
 ISR(TIMER0_COMPA_vect) //tempos
 {
+    cont300ms--;
     if(flag==1)
         cont_20ms--;
     if((cont_20ms<0)&&(flag==0))
@@ -161,6 +163,19 @@ ISR(TIMER0_COMPA_vect) //tempos
             flag_reload=0;
         }
     }
+    if(flag_single==2 && cont300ms==0)
+    {
+        municoes--;
+        cont300ms=6;
+        for(x=0; x<1000; x++)
+        {
+            PORTB|=(1<<PB7);
+            _delay_us(20);
+            PORTB&=~(1<<PB7);
+            _delay_us(3);
+        }
+
+    }
 }
 
 ISR(INT0_vect) //disparo PD2 pino4
@@ -175,35 +190,43 @@ ISR(INT0_vect) //disparo PD2 pino4
 
         PORTB|=(1<<PB7); //pino 10
     }*/
-    char pulse=14,i,j;
+    char pulse=14,j;
+    int i;
 
-    if(cont_sing500ms==0 && municoes>0)
+    if(cont_sing500ms==0 && municoes>0 && flag_single==0 )
     {
         cont_sing500ms=10;
-        municoes--;
-        for(j=0; j<7; j++)
+
+
+        //send second 16 bursts
+        if(multi==0 )
         {
-            for(i=0; i<32; i++)
+            municoes--;
+            flag_single=1;
+            for(i=0; i<1000; i++)
             {
                 PORTB|=(1<<PB7);
-                _delay_us(7);
+                _delay_us(20);
                 PORTB&=~(1<<PB7);
-                _delay_us(21);
-            }
-
-
-            _delay_us(1700);
-
-            //send second 16 bursts
-            for(i=0; i<32; i++)
-            {
-                PORTB|=(1<<PB7);
-                _delay_us(7);
-                PORTB&=~(1<<PB7);
-                _delay_us(21);
+                _delay_us(3);
             }
         }
+
+
+
+
     }
+    else
+    {
+        flag_single=0;
+        cont_sing500ms=10;
+    }
+    if(multi==1 && flag_single!=2)
+    {
+        flag_single=2;
+
+    }
+
 }
 
 ISR(INT1_vect) //reload PD3 pino 5
@@ -216,6 +239,7 @@ ISR(PCINT2_vect) // vida
 {
     char pin=PIND;
     char vida_tx[5];
+
     if(((pin&0b00100000)!=0)&&flag==0)//cabeça pino11 PD5
     {
         PCICR&=~(1<<PCIE2);
@@ -257,6 +281,16 @@ ISR(PCINT2_vect) // vida
                     nrf_enviar(vida_tx);
                     PORTB^=(1<<PB6);
                 }
+            }
+            else if(((pin&0b00010000)!=0)&&flag==0) //alterar estado disparo pino6 PD4
+            {
+                PCICR&=~(1<<PCIE2);
+                flag=1;
+                if(multi==1)
+                {
+                    multi=0;
+                }
+                else multi=1;
             }
             else
                 flag=0;
@@ -346,10 +380,16 @@ void inicio()
 }
 void printmenu()
 {
-    cursorxy(16,0);
+    cursorxy(0,0);
     //putstr("Player: ");
     putstr(nome);
+    cursorxy(35,0);
+    if(multi==1)
+        putstr("Multi");
+    else
+        putstr("Single");
     cursorxy(0,1);
+
     putstr("Vida: ");
     putint(vida);
     if(vida<100)
