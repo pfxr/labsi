@@ -410,10 +410,10 @@ void gameover()
     putstr(" | ");
     putint(ganho);
     putstr(" | ");
-    putint(headshots);
+    putint(headshots2);
 
 
-    delay_ms(4000);
+    delay_ms(10000);
     clearram();
     cursorxy(16,0);
     if(vida2<=0)
