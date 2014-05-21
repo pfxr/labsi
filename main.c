@@ -393,6 +393,20 @@ void printmenu()
 
 void gameover()
 {
+    //gameover
+    clearram();
+    cursorxy(16,0);
+    if(vida2<=0)
+        putstr("YOU WIN!!");
+    else
+        putstr("Game Over");
+    if(flag_head==1)
+    {
+        cursorxy(8,2);
+        putstr("@ HEADSHOT!!!");
+        flag_head=0;
+    }
+
     clearram();
     cursorxy(6,0);
     putstr("V | D | @ ");
@@ -412,22 +426,8 @@ void gameover()
     putint(ganho);
     putstr(" | ");
     putint(headshots2);
-
-
     delay_ms(10000);
     clearram();
-    cursorxy(16,0);
-    if(vida2<=0)
-        putstr("YOU WIN!!");
-    else
-        putstr("Game Over");
-    if(flag_head==1)
-    {
-        cursorxy(8,2);
-        putstr("@ HEADSHOT!!!");
-        flag_head=0;
-    }
-
     cursorxy(0,4);
     putstr("Dispara para  recomecar...");
     while((EIFR&&0b00000001)!=1);
@@ -435,7 +435,6 @@ void gameover()
     vida2=100;
     municoes=balas;
     vida=100;
-
     clearram();
     printmenu();
 
