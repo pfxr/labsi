@@ -25,11 +25,11 @@ volatile unsigned char rx,flag_rx;
 volatile char vida=100,flag=0,cont_20ms=6,cont_sing500ms=10,cont_reload=0,flag_reload;
 volatile char pisca=30,municoes,flag_head=0;
 char data_array[4],buffer[30],nome[15]="Pedro";
-char vida2=100;
+char vida2=100,ganho=0,perco=0,headshots=0,headshots2=0;
 
 uint8_t temp;
-uint8_t rx_address[5] = joao1;
-uint8_t tx_address[5] = pedro1;
+uint8_t tx_address[5] = joao1;
+uint8_t rx_address[5] = pedro1;
 
 void uart_init (void)
 {
@@ -175,30 +175,33 @@ ISR(INT0_vect) //disparo PD2 pino4
 
          PORTB|=(1<<PB7); //pino 10
      }*/
-    char pulse=14,i;
+    char pulse=14,i,j;
 
     if(cont_sing500ms==0 && municoes>0)
     {
         cont_sing500ms=10;
         municoes--;
-        for(i=0; i<16; i++)
+        for(j=0; j<7; j++)
         {
-            PORTB|=(1<<PB7);
-            _delay_us(pulse);
-            PORTB&=~(1<<PB7);
-            _delay_us(pulse);
-        }
+            for(i=0; i<32; i++)
+            {
+                PORTB|=(1<<PB7);
+                _delay_us(7);
+                PORTB&=~(1<<PB7);
+                _delay_us(21);
+            }
 
 
-        _delay_us(7330);
+            _delay_us(1700);
 
-        //send second 16 bursts
-        for(i=0; i<16; i++)
-        {
-            PORTB|=(1<<PB7);
-            _delay_us(pulse);
-            PORTB&=~(1<<PB7);
-            _delay_us(pulse);
+            //send second 16 bursts
+            for(i=0; i<32; i++)
+            {
+                PORTB|=(1<<PB7);
+                _delay_us(7);
+                PORTB&=~(1<<PB7);
+                _delay_us(21);
+            }
         }
     }
 }
@@ -222,6 +225,8 @@ ISR(PCINT2_vect) // vida
             vida=vida-80;
             sprintf(vida_tx,"%c1",vida);
             nrf_enviar(vida_tx);
+            if(vida<=0)
+                headshots2++;
             PORTB^=(1<<PB6);
         }
     }
@@ -388,6 +393,28 @@ void printmenu()
 void gameover()
 {
     clearram();
+    cursorxy(6,0);
+    putstr("V | D | @ ");
+    cursorxy(0,1);
+    putstr("P__|___|__");
+    cursorxy(6,2);
+    putint(ganho);
+    putstr(" | ");
+    putint(perco);
+    putstr(" | ");
+    putint(headshots);
+    cursorxy(0,3);
+    putstr("J__|___|__");
+    cursorxy(6,4);
+    putint(perco);
+    putstr(" | ");
+    putint(ganho);
+    putstr(" | ");
+    putint(headshots);
+
+
+    delay_ms(4000);
+    clearram();
     cursorxy(16,0);
     if(vida2<=0)
         putstr("YOU WIN!!");
@@ -454,7 +481,10 @@ int main(void)
         if(vida>0)
             printmenu();
         else
+        {
+            perco++;
             gameover();
+        }
         clear_data();
         nrf_receber();
         if(data_array[0]!='a')
@@ -462,8 +492,12 @@ int main(void)
             vida2=data_array[0];
             if(vida2<=0)
             {
+                ganho++;
                 if(data_array[1]=='1')
+                {
                     flag_head=1;
+                    headshots++;
+                }
                 gameover();
             }
         }
