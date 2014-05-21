@@ -395,18 +395,18 @@ void gameover()
 {
     //gameover
     clearram();
-    cursorxy(16,0);
+    cursorxy(16,3);
     if(vida2<=0)
         putstr("YOU WIN!!");
     else
         putstr("Game Over");
     if(flag_head==1)
     {
-        cursorxy(8,2);
+        cursorxy(8,4);
         putstr("@ HEADSHOT!!!");
         flag_head=0;
     }
-
+    delay_ms(3000);
     clearram();
     cursorxy(6,0);
     putstr("V | D | @ ");
