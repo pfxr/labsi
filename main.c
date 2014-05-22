@@ -167,13 +167,7 @@ ISR(TIMER0_COMPA_vect) //tempos
     {
         municoes--;
         cont300ms=6;
-        for(x=0; x<1000; x++)
-        {
-            PORTB|=(1<<PB7);
-            _delay_us(20);
-            PORTB&=~(1<<PB7);
-            _delay_us(3);
-        }
+        disparo();
 
     }
 }
@@ -190,8 +184,8 @@ ISR(INT0_vect) //disparo PD2 pino4
 
         PORTB|=(1<<PB7); //pino 10
     }*/
-    char pulse=14,j;
-    int i;
+    char pulse=14,j,i;
+
 
     if(cont_sing500ms==0 && municoes>0 && flag_single==0 )
     {
@@ -203,13 +197,7 @@ ISR(INT0_vect) //disparo PD2 pino4
         {
             municoes--;
             flag_single=1;
-            for(i=0; i<1000; i++)
-            {
-                PORTB|=(1<<PB7);
-                _delay_us(20);
-                PORTB&=~(1<<PB7);
-                _delay_us(3);
-            }
+            disparo();
         }
 
 
@@ -428,7 +416,21 @@ void printmenu()
     else
         putstr("%");
 }
-
+void disparo()
+{
+    char i=0;
+    for(i=0;i<4;i++;)
+    {
+        PORTB|=(1<<PB7);
+        delay_ms(3);
+        PORTB&=~(1<<PB7);
+        delay_ms(3);
+        PORTB|=(1<<PB7);
+        delay_ms(1);
+        PORTB&=~(1<<PB7);
+        _delay_us(4800);
+    }
+}
 
 
 void gameover()
