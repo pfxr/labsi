@@ -136,7 +136,8 @@ void nrf_enviar(char buff[])
 
 ISR(TIMER0_COMPA_vect) //tempos
 {
-    cont300ms--;
+    if(cont300ms>0)
+        cont300ms--;
     if(flag==1)
         cont_20ms--;
     if((cont_20ms<0)&&(flag==0))
@@ -193,37 +194,36 @@ ISR(INT0_vect) //disparo PD2 pino4
     char pulse=14,j;
     int i;
 
-    if(cont_sing500ms==0 && municoes>0 && flag_single==0 )
+    if(multi==0)
     {
-        cont_sing500ms=10;
-
-
-        //send second 16 bursts
-        if(multi==0 )
+        if(flag_single==0&&cont_sing500ms==0)
         {
+            cont_sing500ms=10;
             municoes--;
             flag_single=1;
-            for(i=0; i<1000; i++)
+            disparo();
+        }
+        else
+        {
+            if(flag!=0)
             {
-                PORTB|=(1<<PB7);
-                _delay_us(20);
-                PORTB&=~(1<<PB7);
-                _delay_us(3);
+                cont_sing500ms=10;
+                flag=0;
             }
         }
-
-
-
-
     }
     else
     {
-        flag_single=0;
-        cont_sing500ms=10;
-    }
-    if(multi==1 && flag_single!=2)
-    {
-        flag_single=2;
+        if(flag_single==0)
+        {
+                cont_sing500ms=10;
+                flag_single=2;
+        }
+        else
+        {
+                cont_sing500ms=10;
+                flag=0;
+        }
 
     }
 
