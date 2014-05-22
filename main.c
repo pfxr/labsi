@@ -23,13 +23,13 @@
 volatile unsigned char rx,flag_rx;
 
 volatile char vida=100,flag=0,cont_20ms=6,cont_sing500ms=10,cont300ms=6,cont_reload=0,flag_reload;
-volatile char pisca=30,municoes,flag_head=0,multi=0,flag_single=0;
+volatile char pisca=30,municoes,flag_head=0,multi=0,flag_single=0,pin;
 char data_array[4],buffer[30],nome[15]="Pedro";
 char vida2=100,ganho=0,perco=0,headshots=0,headshots2=0;
 volatile int x;
 uint8_t temp;
-uint8_t rx_address[5] = joao1;
-uint8_t tx_address[5] = pedro1;
+uint8_t tx_address[5] = joao1;
+uint8_t rx_address[5] = pedro1;
 
 void uart_init (void)
 {
@@ -49,11 +49,12 @@ void setup(void)
     //uart_init();
     EICRA=0b00001101;
     EIMSK=0x03;
-    PCICR |=(1<<PCIE2);
+
     PCMSK2 |=(1<<PCINT17);
     PCMSK2 |=(1<<PCINT21);
     PCMSK2 |=(1<<PCINT16);
     PCMSK2 |=(1<<PCINT20);
+    PCICR |=(1<<PCIE2);
     TCCR0A=0b00000010;
     TCCR0B=0b00000100;
     OCR0A=194;
@@ -134,6 +135,31 @@ void nrf_enviar(char buff[])
     _delay_ms(10);
 }
 
+
+
+
+void disparo()
+{
+    int i=0,j=0,w=0;
+    for(i=0; i<4; i++)
+    {
+        for(j=0; j<231; j++)
+        {
+            PORTB^=(1<<PB7);
+            _delay_us(13);
+        }
+        PORTB&=~(1<<PB7);
+        _delay_ms(3);
+        for(j=0; j<77; j++)
+        {
+            PORTB^=(1<<PB7);
+            _delay_us(13);
+        }
+        PORTB&=~(1<<PB7);
+        _delay_us(4800);
+    }
+}
+
 ISR(TIMER0_COMPA_vect) //tempos
 {
     if(cont300ms>0)
@@ -164,12 +190,16 @@ ISR(TIMER0_COMPA_vect) //tempos
             flag_reload=0;
         }
     }
-    if(flag_single==2 && cont300ms==0)
+    if(municoes>0)
     {
-        municoes--;
-        cont300ms=6;
-        disparo();
-
+        if(flag_single==2 && cont300ms==0)
+        {
+            if((PIND&0b00000100)==0)
+                flag_single=0;
+            municoes--;
+            cont300ms=6;
+            disparo();
+        }
     }
 }
 
@@ -190,33 +220,39 @@ ISR(INT0_vect) //disparo PD2 pino4
 
     if(multi==0)
     {
-        if(flag_single==0&&cont_sing500ms==0)
+        if(municoes>0)
         {
-            cont_sing500ms=10;
-            municoes--;
-            flag_single=1;
-            disparo();
-        }
-        else
-        {
-            if(flag!=0)
+            if((flag_single==0)&&(cont_sing500ms==0))
             {
                 cont_sing500ms=10;
-                flag=0;
+                municoes--;
+                flag_single=1;
+                disparo();
+            }
+            else
+            {
+                if(flag_single!=0)
+                {
+                    cont_sing500ms=10;
+                    flag_single=0;
+                }
             }
         }
     }
     else
     {
-        if(flag_single==0)
+        if(flag_single==0&&cont_sing500ms==0)
         {
-                cont_sing500ms=10;
-                flag_single=2;
+            cont_sing500ms=2;
+            flag_single=2;
         }
         else
         {
+            if(flag_single!=0&&cont_sing500ms==0)
+            {
                 cont_sing500ms=10;
-                flag=0;
+                flag_single=0;
+            }
         }
 
     }
@@ -231,10 +267,11 @@ ISR(INT1_vect) //reload PD3 pino 5
 
 ISR(PCINT2_vect) // vida
 {
-    char pin=PIND;
+
+    pin=PIND;
     char vida_tx[5];
 
-    if(((pin&0b00100000)!=0)&&flag==0)//cabeça pino11 PD5
+    if(((pin&0b00110011)==3)&&flag==0)//cabeça pino11 PD5
     {
         PCICR&=~(1<<PCIE2);
         flag=1;
@@ -250,7 +287,7 @@ ISR(PCINT2_vect) // vida
     }
     else
     {
-        if(((pin&0b00000001)!=0)&&flag==0)//peito pino2 PD0
+        if(((pin&0b00110011)==34)&&flag==0)//peito pino2 PD0
         {
             PCICR&=~(1<<PCIE2);
             flag=1;
@@ -264,7 +301,7 @@ ISR(PCINT2_vect) // vida
         }
         else
         {
-            if(((pin&0b00000010)!=0)&&flag==0)//braço pin3 PD1
+            if(((pin&0b00110011)==33)&&flag==0)//braço pin3 PD1
             {
                 PCICR&=~(1<<PCIE2);
                 flag=1;
@@ -334,7 +371,7 @@ void inicio()
     clearram();
     cursorxy(0,0);
     putstr("Dispare para  comecar");
-    while((EIFR&&0b00000001)!=1);
+    while((EIFR&0b00000001)!=1);
     delay_ms(100);
     // sprintf(buffer,"%d4\r\n",player);
     //  nrf_enviar(buffer);
@@ -375,7 +412,6 @@ void inicio()
 void printmenu()
 {
     cursorxy(0,0);
-    //putstr("Player: ");
     putstr(nome);
     cursorxy(35,0);
     if(multi==1)
@@ -401,17 +437,27 @@ void printmenu()
     }
     else
     {
-        if(pisca>15)
+        if(flag_reload==1)
         {
-            putstr("RECARREGAR       ");
-            pisca--;
+            putstr("A RECARREGAR     ");
+
         }
         else
         {
-            pisca--;
-            if(pisca==0)
-                pisca=30;
-            putstr("                 ");
+            if(pisca>15)
+            {
+                putstr("RECARREGAR       ");
+                pisca--;
+            }
+            else
+            {
+
+                pisca--;
+                if(pisca==0)
+                    pisca=30;
+                putstr("                 ");
+
+            }
         }
     }
     cursorxy(0,4);
@@ -422,21 +468,7 @@ void printmenu()
     else
         putstr("%");
 }
-void disparo()
-{
-    char i=0;
-    for(i=0;i<4;i++;)
-    {
-        PORTB|=(1<<PB7);
-        delay_ms(3);
-        PORTB&=~(1<<PB7);
-        delay_ms(3);
-        PORTB|=(1<<PB7);
-        delay_ms(1);
-        PORTB&=~(1<<PB7);
-        _delay_us(4800);
-    }
-}
+
 
 
 void gameover()
@@ -478,7 +510,7 @@ void gameover()
     clearram();
     cursorxy(0,4);
     putstr("Dispara para  recomecar...");
-    while((EIFR&&0b00000001)!=1);
+    while((EIFR&0b00000001)!=1);
     delay_ms(100);
     vida2=100;
     municoes=balas;
