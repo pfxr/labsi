@@ -23,7 +23,7 @@
 volatile unsigned char rx,flag_rx;
 
 volatile char vida=100,flag=0,cont_20ms=6,cont_sing500ms=10,cont300ms=6,cont_reload=0,flag_reload;
-volatile char pisca=30,municoes,flag_head=0,multi=0,flag_single=0,pin;
+volatile char pisca=30,municoes,flag_head=0,multi=0,flag_single=0,pin,cont_vibr1s=0;
 char data_array[4],buffer[30],nome[15]="Pedro";
 char vida2=100,ganho=0,perco=0,headshots=0,headshots2=0;
 volatile int x;
@@ -137,10 +137,13 @@ void nrf_enviar(char buff[])
 
 
 
-
 void disparo()
 {
-    int i=0,j=0,w=0;
+    int i=0,j=0;
+    if(multi==0)
+        cont_vibr1s=10;
+    else
+        cont_vibr1s=15;
     for(i=0; i<4; i++)
     {
         for(j=0; j<231; j++)
@@ -201,6 +204,16 @@ ISR(TIMER0_COMPA_vect) //tempos
             disparo();
         }
     }
+    if(cont_vibr1s>0)
+    {
+        if(cont_vibr1s==10||cont_vibr1s==15)
+            PORTB|=(1<<PB6);
+        cont_vibr1s--;
+        if(multi==0&&cont_vibr1s==0)
+            PORTB&=~(1<<PB6);
+        if((multi==1&&cont_vibr1s==7))
+            PORTB&=~(1<<PB6);
+    }
 }
 
 ISR(INT0_vect) //disparo PD2 pino4
@@ -215,9 +228,6 @@ ISR(INT0_vect) //disparo PD2 pino4
 
         PORTB|=(1<<PB7); //pino 10
     }*/
-    char pulse=14,j,i;
-
-
     if(multi==0)
     {
         if(municoes>0)
@@ -348,7 +358,7 @@ void printinic()
 }
 void inicio()
 {
-    char i,j=0;
+    // char i,j=0;
 
     enviar("\r\n> TX device ready\r\n");
 
@@ -413,9 +423,9 @@ void printmenu()
 {
     cursorxy(0,0);
     putstr(nome);
-    cursorxy(35,0);
+    cursorxy(36,0);
     if(multi==1)
-        putstr("Multi");
+        putstr("Rifle");
     else
         putstr("Single");
     cursorxy(0,1);
@@ -451,12 +461,10 @@ void printmenu()
             }
             else
             {
-
                 pisca--;
                 if(pisca==0)
                     pisca=30;
                 putstr("                 ");
-
             }
         }
     }
