@@ -23,13 +23,14 @@
 volatile unsigned char rx,flag_rx;
 
 volatile char vida=100,flag=0,cont_20ms=6,cont_sing500ms=10,cont300ms=6,cont_reload=0,flag_reload;
-volatile char pisca=30,municoes,flag_head=0,multi=0,flag_single=0,pin,cont_vibr1s=0;
+volatile char cont_disparo=0;
+pisca=30,municoes,flag_head=0,multi=0,flag_single=0,pin,cont_vibr1s=0;
 char data_array[4],buffer[30],nome[15]="Pedro";
 char vida2=100,ganho=0,perco=0,headshots=0,headshots2=0;
 volatile int x;
 uint8_t temp;
-uint8_t tx_address[5] = joao1;
-uint8_t rx_address[5] = pedro1;
+uint8_t rx_address[5] = joao1;
+uint8_t tx_address[5] = pedro1;
 
 void uart_init (void)
 {
@@ -55,6 +56,10 @@ void setup(void)
     PCMSK2 |=(1<<PCINT16);
     PCMSK2 |=(1<<PCINT20);
     PCICR |=(1<<PCIE2);
+    TCCR1B|=(1<<WGM12);
+    TCCR1B|=(1<<CS11);
+    OCR1A=124;
+    TIMSK1|= 2;
     TCCR0A=0b00000010;
     TCCR0B=0b00000100;
     OCR0A=194;
@@ -144,23 +149,38 @@ void disparo()
         cont_vibr1s=10;
     else
         cont_vibr1s=15;
-    for(i=0; i<4; i++)
+    if(cont_disparo==0)
     {
-        for(j=0; j<231; j++)
+        do
         {
-            PORTB^=(1<<PB7);
+            PORTB|=(1<<PB7);
+            cont_disparo=3;
+            _delay_us(13);
+            PORTB&=~(1<<PB7);
             _delay_us(13);
         }
-        PORTB&=~(1<<PB7);
-        _delay_ms(3);
-        for(j=0; j<77; j++)
+        while(cont_disparo>0);
+        cont_disparo=3;
+        while(cont_disparo!=0);
+        do
         {
-            PORTB^=(1<<PB7);
+            PORTB|=(1<<PB7);
+            cont_disparo=1;
+            _delay_us(13);
+            PORTB&=~(1<<PB7);
             _delay_us(13);
         }
+        while(cont_disparo>0);
         PORTB&=~(1<<PB7);
-        _delay_us(4800);
+        cont_disparo=5;
     }
+}
+
+
+ISR(TIMER1_COMPA_vect) //tempos
+{
+    if(cont_disparo>0)
+        cont_disparo--;
 }
 
 ISR(TIMER0_COMPA_vect) //tempos

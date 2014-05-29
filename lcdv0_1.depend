@@ -24,3 +24,16 @@
 1400166439 source:/home/pedro/Documentos/LABSI/labsi/radioPinFunctions.c
 	<avr/io.h>
 
+1400516276 source:/home/joao/Documentos/atmega/labsis/labsi/nrf24.c
+	"nrf24.h"
+	<string.h>
+
+1400516276 /home/joao/Documentos/atmega/labsis/labsi/nrf24.h
+	"nRF24L01.h"
+	<stdint.h>
+
+1400516276 /home/joao/Documentos/atmega/labsis/labsi/nRF24L01.h
+
+1400516276 source:/home/joao/Documentos/atmega/labsis/labsi/radioPinFunctions.c
+	<avr/io.h>
+
