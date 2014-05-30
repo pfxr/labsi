@@ -65,8 +65,8 @@ void setup(void)
     TCCR0A=0b00000010;
     TCCR0B=0b00000100;
     OCR0A=194;
-
     TIMSK0|= 2;
+
     SREG |= 0x80;
 }
 
@@ -146,7 +146,7 @@ void nrf_enviar(char buff[])
 
 ISR(TIMER1_COMPA_vect)
 {
-if(tim>0)
+    if(tim>0)
         tim=tim-1;
 
     /*if(teste==0)
@@ -203,17 +203,11 @@ ISR(TIMER0_COMPA_vect) //tempos
     }
     if(cont_sing500ms>0)
         cont_sing500ms--;
-    /*if(cont_sing500ms>2)
-        PORTB^=(1<<PB7);
-    if(cont_sing500ms==2)
-        PORTB&=~(1<<PB7);*/
     if(flag_reload==1) //precisa de reload
     {
-        // PORTB|=(1<<PB0);
         cont_reload--;
         if(cont_reload==0)
         {
-            //  PORTB&=~(1<<PB0);
             municoes=balas;
             flag_reload=0;
         }
@@ -246,16 +240,6 @@ ISR(TIMER0_COMPA_vect) //tempos
 
 ISR(INT0_vect) //disparo PD2 pino4
 {
-    /* char buff[10];
-    if(cont_sing500ms==0 && municoes>0)
-    {
-        cont_sing500ms=10;
-        municoes--;
-        sprintf(buff,"%d1%d",player,municoes);
-        //  nrf_enviar(buff);
-
-        PORTB|=(1<<PB7); //pino 10
-    }*/
     if(multi==0)
     {
         if(municoes>0)
@@ -454,7 +438,7 @@ void printmenu()
     putstr(nome);
     cursorxy(36,0);
     if(multi==1)
-        putstr("Rifle ");
+        putstr("Rifle  ");
     else
         putstr("Single");
     cursorxy(0,1);
@@ -468,11 +452,18 @@ void printmenu()
     cursorxy(0,2);
     if(municoes>0)
     {
+    if(flag_reload==1)
+        {
+            putstr("A RECARREGAR     ");
+
+        }else
+        {
         if(municoes>=10)
             putstr("Municoes: ");
         else
             putstr("Municoes:  ");
         putint(municoes);
+        }
     }
     else
     {
@@ -595,8 +586,9 @@ int main(void)
 
     while(1)
     {
-        if(flag_disparo==1)
+        if(flag_disparo==1)//criei este if, pois chamar a funçao disparo no timer ou
         {
+            //dentro da funcao de int0 dava problemas
             disparo();
             flag_disparo=0;
         }
