@@ -23,8 +23,8 @@
 volatile unsigned char rx,flag_rx;
 
 volatile char vida=100,flag=0,cont_20ms=6,cont_sing500ms=10,cont300ms=6,cont_reload=0,flag_reload;
-volatile char cont_disparo=0;
-pisca=30,municoes,flag_head=0,multi=0,flag_single=0,pin,cont_vibr1s=0;
+volatile int tim=10;
+volatile char pisca=30,flag_disparo=0,municoes,flag_head=0,multi=0,flag_single=0,pin,cont_vibr1s=0,teste=0;
 char data_array[4],buffer[30],nome[15]="Pedro";
 char vida2=100,ganho=0,perco=0,headshots=0,headshots2=0;
 volatile int x;
@@ -50,16 +50,18 @@ void setup(void)
     //uart_init();
     EICRA=0b00001101;
     EIMSK=0x03;
-
     PCMSK2 |=(1<<PCINT17);
     PCMSK2 |=(1<<PCINT21);
     PCMSK2 |=(1<<PCINT16);
     PCMSK2 |=(1<<PCINT20);
     PCICR |=(1<<PCIE2);
-    TCCR1B|=(1<<WGM12);
-    TCCR1B|=(1<<CS11);
-    OCR1A=124;
+
+    TCCR1A=0b00000000;
+    TCCR1B=0b00001001;
+    OCR1A=0x999;
     TIMSK1|= 2;
+
+
     TCCR0A=0b00000010;
     TCCR0B=0b00000100;
     OCR0A=194;
@@ -142,6 +144,19 @@ void nrf_enviar(char buff[])
 
 
 
+ISR(TIMER1_COMPA_vect)
+{
+if(tim>0)
+        tim=tim-1;
+
+    /*if(teste==0)
+        teste=250;
+    teste--;
+    if(teste==0)
+        PORTB^=(1<<PB7);*/
+}
+
+
 void disparo()
 {
     int i=0,j=0;
@@ -149,38 +164,28 @@ void disparo()
         cont_vibr1s=10;
     else
         cont_vibr1s=15;
-    if(cont_disparo==0)
+    if(tim==0)
     {
-        do
+        tim=3;
+        while(tim>0)
         {
             PORTB|=(1<<PB7);
-            cont_disparo=3;
             _delay_us(13);
             PORTB&=~(1<<PB7);
             _delay_us(13);
         }
-        while(cont_disparo>0);
-        cont_disparo=3;
-        while(cont_disparo!=0);
-        do
+        tim=3;
+        while(tim!=0);
+        tim=1;
+        while(tim>0)
         {
             PORTB|=(1<<PB7);
-            cont_disparo=1;
             _delay_us(13);
             PORTB&=~(1<<PB7);
             _delay_us(13);
         }
-        while(cont_disparo>0);
-        PORTB&=~(1<<PB7);
-        cont_disparo=5;
+        tim=5;
     }
-}
-
-
-ISR(TIMER1_COMPA_vect) //tempos
-{
-    if(cont_disparo>0)
-        cont_disparo--;
 }
 
 ISR(TIMER0_COMPA_vect) //tempos
@@ -221,7 +226,8 @@ ISR(TIMER0_COMPA_vect) //tempos
                 flag_single=0;
             municoes--;
             cont300ms=6;
-            disparo();
+            //disparo();
+            flag_disparo=1;
         }
     }
     if(cont_vibr1s>0)
@@ -235,6 +241,8 @@ ISR(TIMER0_COMPA_vect) //tempos
             PORTB&=~(1<<PB6);
     }
 }
+
+
 
 ISR(INT0_vect) //disparo PD2 pino4
 {
@@ -257,7 +265,8 @@ ISR(INT0_vect) //disparo PD2 pino4
                 cont_sing500ms=10;
                 municoes--;
                 flag_single=1;
-                disparo();
+                flag_disparo=1;
+                // disparo();
             }
             else
             {
@@ -445,7 +454,7 @@ void printmenu()
     putstr(nome);
     cursorxy(36,0);
     if(multi==1)
-        putstr("Rifle");
+        putstr("Rifle ");
     else
         putstr("Single");
     cursorxy(0,1);
@@ -586,6 +595,11 @@ int main(void)
 
     while(1)
     {
+        if(flag_disparo==1)
+        {
+            disparo();
+            flag_disparo=0;
+        }
         if(vida>0)
             printmenu();
         else

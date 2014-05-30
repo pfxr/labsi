@@ -37,3 +37,15 @@
 1400516276 source:/home/joao/Documentos/atmega/labsis/labsi/radioPinFunctions.c
 	<avr/io.h>
 
+1401390868 source:/home/joao/Documentos/atmega/labsis/labsi/main.c
+	<avr/io.h>
+	<stdio.h>
+	<avr/interrupt.h>
+	"3310.h"
+	"nrf24.h"
+	<string.h>
+	<util/delay.h>
+
+1400684566 /home/joao/Documentos/atmega/labsis/labsi/3310.h
+	<stdio.h>
+
