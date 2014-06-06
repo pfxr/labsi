@@ -68,9 +68,9 @@ ISR (TIMER2_COMPA_vect)
     if((posicao==0||posicao==1)&&cont_disparar==0)
     {
         if(multi==0)
-        cont_vibr1s=10;
-    else
-        cont_vibr1s=15;
+            cont_vibr1s=10;
+        else
+            cont_vibr1s=15;
 
         TCCR1A ^=(1<<COM1A0) ;  // Toggle OC1A on Compare Match
         if ((TCCR1A & (1<<COM1A0)) == 0)
