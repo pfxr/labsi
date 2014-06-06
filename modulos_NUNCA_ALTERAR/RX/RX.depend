@@ -1,0 +1,76 @@
+# depslib dependency file v1.0
+1397496111 source:/home/joao/Documentos/atmega/labsis/labsi/modulos/RX/main.c
+	<avr/io.h>
+	<stdint.h>
+	"../nrf24.h"
+	<avr/interrupt.h>
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	<util/delay.h>
+
+1397495115 /home/joao/Documentos/atmega/labsis/labsi/modulos/nrf24.h
+	"nRF24L01.h"
+	<stdint.h>
+
+1397495115 /home/joao/Documentos/atmega/labsis/labsi/modulos/nRF24L01.h
+
+1397495115 source:/home/joao/Documentos/atmega/labsis/labsi/modulos/nrf24.c
+	"nrf24.h"
+
+1397495621 source:/home/joao/Documentos/atmega/labsis/labsi/modulos/RX/radioPinFunctions.c
+	<avr/io.h>
+
+1397493284 source:/home/pedro/Documentos/LABSI/labsi/modulos/nrf24.c
+	"nrf24.h"
+
+1397416648 /home/pedro/Documentos/LABSI/labsi/modulos/nrf24.h
+	"nRF24L01.h"
+	<stdint.h>
+
+1397416648 /home/pedro/Documentos/LABSI/labsi/modulos/nRF24L01.h
+
+1397564309 source:/home/pedro/Documentos/LABSI/labsi/modulos/RX/radioPinFunctions.c
+	<avr/io.h>
+
+1397564699 source:/home/pedro/Documentos/LABSI/labsi/modulos/RX/main.c
+	<avr/io.h>
+	<stdint.h>
+	"../nrf24.h"
+	<avr/interrupt.h>
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	<util/delay.h>
+
+1397654426 source:/home/joao/Área de Trabalho/modulos_emteste/nrf24.c
+	"nrf24.h"
+
+1397654441 /home/joao/Área de Trabalho/modulos_emteste/nrf24.h
+	"nRF24L01.h"
+	<stdint.h>
+
+1397495114 /home/joao/Área de Trabalho/modulos_emteste/nRF24L01.h
+
+1397495620 source:/home/joao/Área de Trabalho/modulos_emteste/RX/radioPinFunctions.c
+	<avr/io.h>
+
+1397654546 source:/home/pedro/Documentos/LABSI/labsi/modulos_NUNCA_ALTERAR/RX/main.c
+	<avr/io.h>
+	<stdint.h>
+	"../nrf24.h"
+	<avr/interrupt.h>
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	<util/delay.h>
+
+1397656296 /home/pedro/Documentos/LABSI/labsi/modulos_NUNCA_ALTERAR/nrf24.h
+	"nRF24L01.h"
+	<stdint.h>
+
+1397495114 /home/pedro/Documentos/LABSI/labsi/modulos_NUNCA_ALTERAR/nRF24L01.h
+
+1397495620 source:/home/pedro/Documentos/LABSI/labsi/modulos_NUNCA_ALTERAR/RX/radioPinFunctions.c
+	<avr/io.h>
+
