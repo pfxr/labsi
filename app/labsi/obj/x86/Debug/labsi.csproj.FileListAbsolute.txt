@@ -1,0 +1,23 @@
+c:\users\utilizador\documents\visual studio 2010\Projects\labsi\labsi\bin\Debug\labsi.exe
+c:\users\utilizador\documents\visual studio 2010\Projects\labsi\labsi\bin\Debug\labsi.pdb
+c:\users\utilizador\documents\visual studio 2010\Projects\labsi\labsi\obj\x86\Debug\ResolveAssemblyReference.cache
+c:\users\utilizador\documents\visual studio 2010\Projects\labsi\labsi\obj\x86\Debug\labsi.Form1.resources
+c:\users\utilizador\documents\visual studio 2010\Projects\labsi\labsi\obj\x86\Debug\labsi.Properties.Resources.resources
+c:\users\utilizador\documents\visual studio 2010\Projects\labsi\labsi\obj\x86\Debug\GenerateResource.read.1.tlog
+c:\users\utilizador\documents\visual studio 2010\Projects\labsi\labsi\obj\x86\Debug\GenerateResource.write.1.tlog
+c:\users\utilizador\documents\visual studio 2010\Projects\labsi\labsi\obj\x86\Debug\labsi.exe
+c:\users\utilizador\documents\visual studio 2010\Projects\labsi\labsi\obj\x86\Debug\labsi.pdb
+G:\labsi\labsi\obj\x86\Debug\labsi.exe
+G:\labsi\labsi\obj\x86\Debug\labsi.pdb
+G:\labsi\labsi\bin\Debug\labsi.exe
+G:\labsi\labsi\bin\Debug\labsi.pdb
+G:\labsi\labsi\obj\x86\Debug\labsi.Form1.resources
+G:\labsi\labsi\obj\x86\Debug\labsi.Properties.Resources.resources
+G:\labsi\labsi\obj\x86\Debug\labsi.csproj.GenerateResource.Cache
+d:\Users\User\Desktop\labsi\labsi\obj\x86\Debug\labsi.exe
+d:\Users\User\Desktop\labsi\labsi\obj\x86\Debug\labsi.pdb
+d:\Users\User\Desktop\labsi\labsi\bin\Debug\labsi.exe
+d:\Users\User\Desktop\labsi\labsi\bin\Debug\labsi.pdb
+d:\Users\User\Desktop\labsi\labsi\obj\x86\Debug\labsi.Form1.resources
+d:\Users\User\Desktop\labsi\labsi\obj\x86\Debug\labsi.Properties.Resources.resources
+d:\Users\User\Desktop\labsi\labsi\obj\x86\Debug\labsi.csproj.GenerateResource.Cache
