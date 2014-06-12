@@ -42,7 +42,7 @@ class DialogoLed(QtGui.QMainWindow):
 	        self.ui = Ui_DialogoLed()
 	        self.ui.setupUi(self)
 	 
-	        #self.arduino = serial.Serial('/dev/ttyACM1', 9600)
+	        self.arduino = serial.Serial('/dev/ttyACM1', 9600)
 	 	self.ui.frame_2.hide()	
 		self.ui.frame_3.hide()
 		
