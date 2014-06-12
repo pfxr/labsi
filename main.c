@@ -22,8 +22,9 @@ volatile char vida=100,flag=0,cont_20ms=6,cont_disparar=-1,cont_disparo=10,cont3
 char data_array[4],buffer[30],nome[15]="Pedro";
 char vida2=100,ganho=0,perco=0,headshots=0,headshots2=0;
 
-uint8_t rx_address[5] = joao1;
-uint8_t tx_address[5] = pedro1;
+uint8_t rx_address[5] = pedro2;
+uint8_t tx1_address[5] = pedro1;
+uint8_t tx2_address[5] = joao1;
 
 void setup(void)
 {
@@ -103,9 +104,14 @@ void nrf_receber()
 
 void nrf_enviar(char buff[])
 {
-    char tamanho=0,i=0;
+    char tamanho=0,i=0,j;
     uint8_t temp;
+    	
     tamanho=strlen(buff);
+    for(j=0;j<2;j++)
+    {
+	if(j==0)  nrf24_tx_address(tx1_address);
+	if(j==1)   nrf24_tx_address(tx2_address);
     while(i<=tamanho)
     {
         data_array[0] =buff[i];
@@ -141,7 +147,7 @@ void nrf_enviar(char buff[])
     // nrf24_powerDown();
 
     /* Wait a little ... */
-    _delay_ms(10);
+    _delay_ms(10);}
 }
 
 /*
