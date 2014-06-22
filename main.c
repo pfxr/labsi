@@ -4,99 +4,114 @@
 #include "3310.h"
 #include "nrf24.h"
 #include <string.h>
+
+#define F_CPU 1000000
 #include <util/delay.h>
 
 #define balas 30
 
-#define pedro1 {0xD7,0xD7,0xD7,0xD7,0xD7}
+#define pedro1 {0xD7,0xD7,0xD7,0xD7,0xD7}  //endereços mac dos modulos
 #define pedro2 {0xE7,0xE7,0xE7,0xE7,0xE7}
 #define joao1  {0xA7,0xA7,0xA7,0xA7,0xA7}
 #define joao2  {0xB7,0xB7,0xB7,0xB7,0xB7}
-#define player 1
+#define base  {0xC8,0xC8,0xC8,0xC8,0xC8}
+//#define player 1
 
-#define F_CPU 1000000
+volatile char player='1';
 
-volatile int cont=0,posicao=0,tim=10;
-volatile char vida=100,flag=0,cont_20ms=6,cont_disparar=-1,cont_disparo=10,cont300ms=6,cont_reload=0,flag_reload,
-              pisca=30,flag_disparo=0,municoes,flag_head=0,multi=0,flag_single=0,pin,cont_vibr1s=0,teste=0;
-char data_array[4],buffer[30],nome[15]="";
-char vida2=100,ganho=0,perco=0,headshots=0,headshots2=0;
+volatile char led_pisca=10,posicao=0,flag_block=0,cont_20ms=6,cont_disparar=-1,cont_disparo=10,cont300ms=6,cont_reload=0,flag_reload,
+              pin,cont_vibr1s=0,teste=0;
 
-uint8_t rx_address[5] = joao1;
-uint8_t tx1_address[5] = pedro1;
-uint8_t tx2_address[5] = joao2;
+char data_array[4],buffer[30],nome[7]="pedro";
+char vida2=100,ganho=0,perco=0,headshots=0,headshots2=0,pisca=30,flag_disparo=0,flag_head=0,vida=100,multi=0,flag_single=0;
+int municoes=0;
+
+uint8_t rx_address[5] = joao1; //estabelece quais os mac's em uso
+uint8_t tx1_address[5] = pedro1; //rx corresponde ao nosso e tx para onde vai enviar
+uint8_t tx2_address[5] = base;
 
 void setup(void)
 {
-    DDRB|=0b11011111;
-    DDRC|=0b00011111;
-    initlcd();
+    DDRB|=(1<<PB7)|(1<<PB1); //inicialização dos portos
+    DDRC|=(1<<PC0)|(1<<PC1)|(1<<PC2)|(1<<PC3)|(1<<PC4)|(1<<PC5);
+    DDRD|=(1<<PD6)|(1<<PD7);
+    initlcd(); //chama a função para configurar os registos do lcd
 
-    EICRA=0b00001111;
-    EIMSK=0x03;
-    PCMSK2 |=(1<<PCINT17);
-    PCMSK2 |=(1<<PCINT21);
-    PCMSK2 |=(1<<PCINT16);
-    PCMSK2 |=(1<<PCINT20);
-    PCICR |=(1<<PCIE2);
+    EICRA|=(1<<ISC11)|(1<<ISC10)|(1<<ISC01)|(1<<ISC00); //configura o int0 e int1 para gerar a interrupçao no flanco ascendente
+    EIMSK|=(1<<INT0)|(1<<INT1); //activa a interrupção externa int0 e int1
+    PCICR |=(1<<PCIE2); //ativa os pcint do [16,23]
+    PCMSK2 |=(1<<PCINT17)|(1<<PCINT21)|(1<<PCINT16)|(1<<PCINT20); //mascara para ativar apenas os seguintes pcint
 
+    //configuração do timer 1
     TCCR1A = 0;
-    TCCR1B |=(1<<WGM12) | (1<<CS10);   // CTC, No prescaler
-    OCR1A =  13;          // compare A register value (210 * clock speed)
-    //  = 13.125 nS , so frequency is 1 / (2 * 13.125) = 38095
+    TCCR1B |=(1<<WGM12) | (1<<CS10);   // modo CTC, sem prescaler
+    OCR1A =  13;     //o tempo de cada instrução é dada por t=1/clock=1 us para o clock de 1MHZ
+    //pelo que a interrupção irá demorar 13us para ser executada
+    // f=1/13us=76923Hz
 
-    // Timer 2 - gives us our 1 mS counting interval
-    // 16 MHz clock (62.5 nS per tick) - prescaled by 128
-    //  counter increments every 8 uS.
-    // So we count 125 of them, giving exactly 1000 uS (1 mS)
-    TCCR2A|= (1<<WGM21) ;   // CTC mode
-    OCR2A  = 124;            // count up to 125  (zero relative!!!!)
-    TIMSK2|= (1<<OCIE2A);   // enable Timer2 Interrupt
-    TCCR2B|= (1<<CS21);  //
+    //configuração do timer 2
+    // 1 MHz clock com prescaller de 8 demora 8us por instruçao,
+    //logo o timer irá incrementar a cada 8us
+    //é necessario incrementar 125 vezes para que execute uma interrupcao de 1ms
+    TCCR2A|= (1<<WGM21)|(1<<CS21);   // modo ctc, prescaller=8
+    OCR2A  = 124;
+    TIMSK2|= (1<<OCIE2A);   // ativa a interrupção do timer 2
 
-    TCCR0A=0b00000010;
-    TCCR0B=0b00000100;
+    //Configuração do timer 0 para gerar interrupçao de 50ms
+    TCCR0A|=(1<<WGM01); //modo ctc
+    TCCR0B|=(1<<CS02); //prescaller 256
     OCR0A=194;
-    TIMSK0|= 2;
+    TIMSK0|= 2; //ativa o timer 0
 
-    SREG |= 0x80;
+    sei(); //activa as interrupçoes globais
 }
 
-ISR (TIMER2_COMPA_vect)
+/*NOTA: o nosso receptor so detecta o IR caso este tenha um frequência de 38KHz e após alguns testes verificamos
+que este tinham uma boa deteçao quando o sinal tinha uma frequencia de 38KHz e tinha o seguinte pulso
+
+tempo:   3ms    3ms   1ms
+        ______         ___
+              |_______|   |_____
+
+posicao    0     1     2    3      para a alteração do led na posicão 1 basta usar um exor e deixar a mesma
+posicao pois o tempo de execução e o mesmo
+*/
+
+ISR (TIMER2_COMPA_vect)//interruçao de 1ms
 {
-    if(cont_disparar>0)
+    if(cont_disparar>0)  //quando maior que zero decrementa ate que passe o tempo de cada posicao
         cont_disparar--;
-    if((posicao==0||posicao==1)&&cont_disparar==0)
+    if((posicao==0||posicao==1)&&cont_disparar==0) // o ciclo de dipsaro comeca na posiçao=0
     {
         if(multi==0)
-            cont_vibr1s=10;
+            cont_vibr1s=10;  //variavel para por o motor a vibrar, o tempo é difernete dependo do modo
         else
             cont_vibr1s=15;
 
-        TCCR1A ^=(1<<COM1A0) ;  // Toggle OC1A on Compare Match
-        if ((TCCR1A & (1<<COM1A0)) == 0)
-            PORTB&=~(1<<PB1);  // ensure off
+        TCCR1A ^=(1<<COM1A0) ;  // toggle OC1A on compare match: o timer 1 ira fazer toggle
+        if ((TCCR1A & (1<<COM1A0)) == 0)// ao do led de disparo a cada 13us
+            PORTB&=~(1<<PB1);  //  quando na segunda repetica certifica que o led fica apagado
         posicao++;
-        cont_disparar=3;
+        cont_disparar=3; //tempo de demora desta posiçao
     }
     if(posicao==2&&cont_disparar==0)
     {
-        TCCR1A |=(1<<COM1A0) ; // Toggle OC1A on Compare Match
+        TCCR1A |=(1<<COM1A0) ; // toggle OC1A on compare match activo novamente
         posicao++;
         cont_disparar=1;
     }
     if(posicao==3&&cont_disparar==0)
     {
-        TCCR1A &=~(1<<COM1A0) ;   // Toggle OC1A on Compare Match
-        PORTB&=~(1<<PB1);  // ensure off
-        posicao=0;
-        cont_disparar=-1;
+        TCCR1A &=~(1<<COM1A0) ;   // toggle OC1A on compare match desativo
+        PORTB&=~(1<<PB1);  //desliga o led
+        posicao=0;        //volta a por a posição no zero
+        cont_disparar=-1;  //com este valor bloqueia o ciclo de disparo ate voltar a existir um disparo
     }
 }
 
-void nrf_receber()
+void nrf_receber() //funcao para receber pelo nrf
 {
-    if(nrf24_dataReady())
+    if(nrf24_dataReady()) //se tiver recebido algo, vai buscar os dados e coloca no data array
     {
         nrf24_getData(data_array);
     }
@@ -104,167 +119,151 @@ void nrf_receber()
 
 void nrf_enviar(char buff[])
 {
-    char tamanho=0,i=0,j;
+    char tamanho=0;
+    unsigned char i=0,j;
     uint8_t temp;
 
     tamanho=strlen(buff);
-    for(j=0;j<2;j++)
+    for(j=0; j<2; j++)   //envia para a base e para o outro player,
     {
         if(j==0)  nrf24_tx_address(tx1_address);
         if(j==1)   nrf24_tx_address(tx2_address);
-    while(i<=tamanho)
-    {
-        data_array[0] =buff[i];
-        data_array[1] =buff[i+1];
-        data_array[2] =buff[i+2];
-        data_array[3] =buff[i+3];
-        i=i+4;
-        /* Automatically goes to TX mode */
-        nrf24_send(data_array);
-
-        /* Wait for transmission to end */
-        while(nrf24_isSending());
-
-        /* Make analysis on last tranmission attempt */
-        temp = nrf24_lastMessageStatus();
-
-        if(temp == NRF24_TRANSMISSON_OK)
+        while(i<=tamanho)
         {
+            data_array[0] =buff[i];
+            data_array[1] =buff[i+1];
+            data_array[2] =buff[i+2];
+            data_array[3] =buff[i+3]; //envia os dados num buffer de tamanho 4, e repete ate
+            i=i+4;                    //que todos os dados sejam envados
+
+            nrf24_send(data_array);  //envia o array
+
+
+            while(nrf24_isSending());//espera que o envio seja concluido
+
+
+            temp = nrf24_lastMessageStatus(); //analisa a transmissao
+
+            if(temp == NRF24_TRANSMISSON_OK)
+            {
+                //enviar("recebi"); //debug
+            }
+            else if(temp == NRF24_MESSAGE_LOST)
+            {
+                //enviar("falhou"); //debug
+            }
         }
-        else if(temp == NRF24_MESSAGE_LOST)
-        {
-        }
+        /* Retranmission count indicates the tranmission quality */
+        temp = nrf24_retransmissionCount();  //indica a qualidade do envio
+        //sprintf(buffer,"> Retranmission count: %d\r\n",temp);
+        //enviar(buffer);
+
+
+        nrf24_powerUpRx(); //volta para o modo receptor
+        // nrf24_powerDown(); //ou podemos desliga
+        _delay_ms(10); //espera um pouco para entrar no modo Rx
     }
-    /* Retranmission count indicates the tranmission quality */
-    temp = nrf24_retransmissionCount();
-    //sprintf(buffer,"> Retranmission count: %d\r\n",temp);
-    //enviar(buffer);
-
-    /* Optionally, go back to RX mode ... */
-    nrf24_powerUpRx();
-
-    /* Or you might want to power down after TX */
-    // nrf24_powerDown();
-
-    /* Wait a little ... */
-    _delay_ms(10);}
 }
 
-/*
 
-ISR(TIMER1_COMPA_vect)
+ISR(TIMER0_COMPA_vect) //interrupcao de 50ms
 {
-    if(tim>0)
-        tim=tim-1;
+    char municoes_tx[5];
 
-
-}*/
-
-
-/*void disparo()
-{
-    if(multi==0)
-        cont_vibr1s=10;
-    else
-        cont_vibr1s=15;
-    if(tim==0)
+    led_pisca--;
+    if(led_pisca==0)  //contador para o led pisca
     {
-        tim=3;
-        while(tim>0)
-        {
-            PORTB|=(1<<PB7);
-            _delay_us(13);
-            PORTB&=~(1<<PB7);
-            _delay_us(13);
-        }
-        tim=3;
-        while(tim!=0);
-        tim=1;
-        while(tim>0)
-        {
-            PORTB|=(1<<PB7);
-            _delay_us(13);
-            PORTB&=~(1<<PB7);
-            _delay_us(13);
-        }
-        tim=5;
+        PORTB^=(1<<PB7); //altera o estado do led a cada 500ms
+        led_pisca=10;
     }
-}*/
 
-ISR(TIMER0_COMPA_vect) //tempos
-{
-    if(cont300ms>0)
+    if(cont300ms>0) //contador para o delay entre os disparos do modo riffle
         cont300ms--;
-    if(flag==1)
-        cont_20ms--;
-    if((cont_20ms<0)&&(flag==0))
+    if(flag_block==1)//flag para que apenas seja gerada uma interrupçao nos pcint
+        cont_20ms--; //contador de delay para que seja activada novamente as interrupçoes pcint
+    if((cont_20ms<0)&&(flag_block==0))
         cont_20ms=4;
-    if((cont_20ms==0)&&(flag==1))
+    if((cont_20ms==0)&&(flag_block==1))
     {
         cont_20ms=6;
-        PCICR|=(1<<PCIE2);
+        PCICR|=(1<<PCIE2);//activa novamente as interrupçoes pcint
     }
-    if(cont_disparo>0)
+    if(cont_disparo>0) //contador com delay  de disparos no modo single
         cont_disparo--;
     if(flag_reload==1) //precisa de reload
     {
-        cont_reload--;
+        cont_reload--; //contador de tempo para o reload
         if(cont_reload==0)
         {
-            municoes=balas;
-            flag_reload=0;
+            municoes=balas; //coloca novamente o valor maximo das balas
+            flag_reload=0; //flag para indicar quando esta a recarrega, quando 0 nao se encontra a carregar
         }
     }
-    if(municoes>0 && flag_single==2 && cont300ms==0)
+    if(municoes>0 && flag_single==2 && cont300ms==0)  //se este if se verificar é efectuado um disparo no modo riffle
     {
-        if((PIND&0b00000100)==0)
-            flag_single=0;
-        else
+        if((PIND&0b00000100)==0)  //se o botao de disparo deixar de ser primido para de disparar
+            flag_single=0;  //este flag quando =1 este  no modo single, quando =0 nao e efectuado nenhum disparo quando =2 sao efectuados
+        else               //repetitivamente disparos no modo rifle ate que seja diferente de 2
         {
-            municoes--;
-            cont300ms=6;
+            municoes--; //sempre que efectuado um disparo e decrementado nas muncioes
+            if(municoes>9)
+                sprintf(buffer,"%c2%d",player,municoes); //envia o valor das municoes por Rf
+            else
+                sprintf(buffer,"%c20%d",player,municoes);
+            nrf_enviar(buffer);
+
+            cont300ms=6; //carrega o contador de delay entre disparos com o valor 6
             if(flag_reload==0)
             {
-                cont_disparar=0;
+                cont_disparar=0; //flag que permite que no timer seja possivel ser executado o ciclo de disparo
             }
         }
 
     }
-    if(cont_vibr1s>0)
+    if(cont_vibr1s>0)  //este ciclo tem como objectivo criar a vibração da arma sempre que existe
     {
+        //um disparo
         if(cont_vibr1s==10||cont_vibr1s==15)
-            PORTB|=(1<<PB6);
+            PORTC|=(1<<PC5);
         cont_vibr1s--;
         if(multi==0&&cont_vibr1s==0)
-            PORTB&=~(1<<PB6);
+            PORTC&=~(1<<PC5);
         if((multi==1&&cont_vibr1s==7))
-            PORTB&=~(1<<PB6);
+            PORTC&=~(1<<PC5);
     }
 }
 
 
 
-ISR(INT0_vect) //disparo PD2 pino4
+ISR(INT0_vect) //disparo PD2 pino4** função de disparo
 {
-    if(multi==0)
+    char municoes_tx1[5];
+    if(flag_reload==0) //se estiver a  recarregar
     {
-        if(municoes>0&&cont_disparo==0)
+        if(multi==0) //se estiver no modo single
         {
-            cont_disparo=17;
-            municoes--;
-
-            if(flag_reload==0)
+            if(municoes>0&&cont_disparo==0)
             {
-                cont_disparar=0;
+                cont_disparo=17; //delay entre cada disparo sera no minimo 17*50ms
+                municoes--; //decrementa o numero de municoes
+                if(municoes>9)
+                    sprintf(municoes_tx1,"%c2%d",player,municoes);//buffer a ser enviado para a base com as municoes
+                else
+                    sprintf(municoes_tx1,"%c20%d",player,municoes);
+                nrf_enviar(buffer);
+
+
+                cont_disparar=0;  //flag que permite que no timer seja possivel ser executado o ciclo de disparo
             }
+
         }
-    }
-    else
-    {
-        if(flag_single==0&&cont_disparo==0)
+        else
         {
-            cont_disparo=2;
-            flag_single=2;
+            if(flag_single==0&&cont_disparo==0) //se nao estiver a disparar (flag_single=0), e tiver passado
+            {                                  //o delay entre o ultimo disparo
+                cont_disparo=2;
+                flag_single=2;// flag activa os disparos continuos no modo rifle
+            }
         }
     }
 
@@ -272,163 +271,163 @@ ISR(INT0_vect) //disparo PD2 pino4
 
 ISR(INT1_vect) //reload PD3 pino 5
 {
-    flag_reload=1;
-    cont_reload=40;
+    flag_reload=1; //activa a flag de recarregar
+    cont_reload=40; //o carregamento da arma demora 40*50ms
 }
 
-ISR(PCINT2_vect) // vida
+ISR(PCINT2_vect) //rotina de interrupçoes pcint
 {
 
     pin=PIND;
-    char vida_tx[5];
+    char vida_tx[5];//buffer de envio para a base
 
-    if(((pin&0b00110011)==3)&&flag==0)//cabeça pino11 PD5
+    if(((pin&0b00100011)==3)&&flag_block==0)//cabeca PD5// executa se o sensor da cabeça estiver em zero, e o flanco for descendente
     {
-        PCICR&=~(1<<PCIE2);
-        flag=1;
+        PCICR&=~(1<<PCIE2); // os pcint, que serao activos apos 200ms
+        flag_block=1;
         if(vida>0)
         {
-            vida=vida-80;
-            sprintf(vida_tx,"%c1",vida);
+            vida=vida-80; //decrementa a vida do jogador
+            sprintf(vida_tx,"%c1%c1",player,vida);  //buffer a ser enviado para a base com a vida do jogador
             nrf_enviar(vida_tx);
             if(vida<=0)
-                headshots2++;
+                headshots2++; //se a vida for menor ou igual a zero quer dizer que o jogador perdeu com um headshot
         }
     }
     else
     {
-        if(((pin&0b00110011)==34)&&flag==0)//peito pino2 PD0
+        if(((pin&0b00100011)==34)&&flag_block==0)//peito pino2 PD0**semelhante ao da cabeça
         {
             PCICR&=~(1<<PCIE2);
-            flag=1;
+            flag_block=1;
             if(vida>0)
             {
                 vida=vida-40;
-                sprintf(vida_tx,"%c",vida);
+                sprintf(vida_tx,"%c1%c",player,vida);
                 nrf_enviar(vida_tx);
-                PORTB^=(1<<PB6);
             }
         }
         else
         {
-            if(((pin&0b00110011)==33)&&flag==0)//braço pin3 PD1
+            if(((pin&0b00100011)==33)&&flag_block==0)//braço pin3 PD1****semelhante ao da cabeça
             {
                 PCICR&=~(1<<PCIE2);
-                flag=1;
+                flag_block=1;
                 if(vida>0)
                 {
                     vida=vida-20;
-                    sprintf(vida_tx,"%c",vida);
+                    sprintf(vida_tx,"%c1%c",player,vida);
                     nrf_enviar(vida_tx);
-                    PORTB|=(1<<PB7);
-                    delay_ms(500);
-                    PORTB&=~(1<<PB7);                    //  PORTB|=(1<<PB0);
+
                 }
             }
-            else if(((pin&0b00010000)!=0)&&flag==0) //alterar estado disparo pino6 PD4
+            else if(((pin&0b00010000)!=0)&&flag_block==0) //alterar estado disparo pino6 PD4
             {
                 PCICR&=~(1<<PCIE2);
-                flag=1;
-                if(multi==1)
+                flag_block=1;
+                if(multi==1)  //altera o  o modo de disparo
                 {
                     multi=0;
                 }
                 else multi=1;
             }
             else
-                flag=0;
+                flag_block=0;
         }
     }
     if(vida<0)
-        vida=0;
+        vida=0; //se a vida for inferior a zero ela fica com valor zero
 }
 
 
-void printinic()
+void printinic()// esta funcão apenas imprime ao inicar o jogo uma mensagem animada a dizer lasertag
 {
     char i=0;
     cursorxy(16,0);
     putstr("LASER TAG");
     cursorxy(4,2);
     putstr("A iniciar");
-    for(i=0; i<3; i++)
+    for(i=0; i<6; i++)
     {
         delay_ms(100);
         putstr(".");
     }
+    clearram();
 }
+
+void clear_data()
+{
+    unsigned char i=0;
+    for(i=0; i<4; i++)
+        data_array[i]='a';
+}
+
 void inicio()
 {
-    /* init hardware pins */
+    unsigned char i=0,j=0;
+    //incia o modulo RF
     nrf24_init();
 
-    /* Channel #2 , payload length: 4 */
-    nrf24_config(2,4);
+    //configura o modulo a funcionar no canal 4, com um buffer de tamanho 4  nrf24_config(2,4);
 
-    /* Set the device addresses */
-    //nrf24_tx_address(tx_address);
+    //define o mac do modulos do jogador
     nrf24_rx_address(rx_address);
-    clearram();
-    cursorxy(0,0);
-    //putstr("A espera 34");
-     do//codigo para a base confirmar que pode inicar o jogo
+    do//codigo para a base confirmar que pode inicar o jogo
     {
-       nrf_receber();
-    }while((data_array[0]!='3')&&(data_array[1]!='4'));
-    clearram();
+        nrf_receber();
+    }
+    while((data_array[0]!='3')&&(data_array[1]!='4')); //aguarda receber "34" da base para indicar que a mesma esta pronta
+    clearram();//limpa o ecra do lcd
     cursorxy(0,0);
-    putstr("Dispare para  comecar");
-    while((EIFR&0b00000001)!=1);
+    putstr("Dispare para  comecar");//escreve no lcd a informaçao
+    while((PIND&0b00000100)==0); //aguarda que seja primido o botao de disparo
     delay_ms(100);
-    sprintf(buffer,"%d4",player);
-    nrf_enviar(buffer);
+    sprintf(buffer,"14");//indica á base que o jogador esta pronto a jogar
+    nrf_enviar(buffer);//
     clearram();
-    cursorxy(0,0);
-    //putstr("enviei14 espero receber1");
+    clear_data(); //chama a função para limpar o data array
+    //
     do
     {
-          nrf_receber();
+        nrf_receber();
     }
-    while((data_array[0]!=player)&&(data_array[1]!='3'));
-    //  putstr("passei");
-    clearram();
-    nome[0]=data_array[2];
+    while((data_array[0]!=player)&&(data_array[1]!='3'));//apos a base enviar o numero do player seguido de um3
+    //vai ser recebido o nome do jogador
+    nome[0]=data_array[2];                           //a string recebida e do formato "nºplayer+3+nome\n"
     nome[1]=data_array[3];
-    char i=2,j=0;
+    i=2;
+    while(data_array[j]!='\n')
+    {
+        if(nrf24_dataReady())
+        {
+            nrf24_getData(data_array);
+            for(j=0; j<=3; j++)
+            {
+                if(data_array[j]=='\n')
+                    break;
+                nome[i]=data_array[j];
 
-     while(data_array[j]!='\n')
-     {
-         if(nrf24_dataReady())
-         {
-             nrf24_getData(data_array);
-             for(j=0; j<=3; j++)
-             {
-                 if(data_array[j]=='\n')
-                     break;
-                 nome[i]=data_array[j];
-
-                 i++;
-             }
-         }
-     }
-
-    vida=100;
-    municoes=balas;
+                i++;
+            }
+        }
+    }
+    vida=100;//inicialização das variasveis a serem imprimidas no ecra
+    municoes=balas; //
     clearram();
 
 }
 void printmenu()
 {
     cursorxy(0,0);
-    putstr(nome);
+    putstr(nome); //imprime o nome no lcd
     cursorxy(36,0);
     if(multi==1)
-        putstr("Rifle  ");
+        putstr("Rifle  ");  //imprime o modo de disparo actual
     else
         putstr("Single");
     cursorxy(0,1);
 
-    putstr("Vida: ");
+    putstr("Vida: "); //imprime a vida
     putint(vida);
     if(vida<100)
         putstr("% ");
@@ -439,19 +438,18 @@ void printmenu()
     {
         if(flag_reload==1)
         {
-            putstr("A RECARREGAR     ");
-
+            putstr("A RECARREGAR     "); //caso esteja a recearregar aparece a mensagem
         }
         else
         {
             if(municoes>=10)
-                putstr("Municoes: ");
-            else
+                putstr("Municoes: "); // se nao estiver a recarregar e tiver municoes imprime no lcd
+            else                      //quantas municoes tem
                 putstr("Municoes:  ");
             putint(municoes);
         }
     }
-    else
+    else            //a mensagem de a recarregar irá piscar enquanto recarrega
     {
         if(flag_reload==1)
         {
@@ -475,7 +473,7 @@ void printmenu()
         }
     }
     cursorxy(0,4);
-    putstr("Joao: ");
+    putstr("Oponente: ");  //imprime no lcd a vida do adversario
     putint(vida2);
     if(vida2<100)
         putstr("% ");
@@ -485,23 +483,22 @@ void printmenu()
 
 
 
-void gameover()
+void fim_djogo()
 {
-    //gameover
-    clearram();
+    clearram(); //limpa todos os dados do lcd
     cursorxy(16,3);
     if(vida2<=0)
-        putstr("YOU WIN!!");
+        putstr("YOU WIN!!"); //indica que ganhamos ou perdemos
     else
         putstr("Game Over");
-    if(flag_head==1)
+    if(flag_head==1)  //caso tenhamos efectuado um headshot indica a mensagem
     {
         cursorxy(8,4);
         putstr("@ HEADSHOT!!!");
         flag_head=0;
     }
     delay_ms(3000);
-    clearram();
+    clearram();// limpa o ecra e mostra uma grelha com os resultados das jogadas totais
     cursorxy(6,0);
     putstr("V | D | @ ");
     cursorxy(0,1);
@@ -524,57 +521,52 @@ void gameover()
     clearram();
     cursorxy(0,4);
     putstr("Dispara para  recomecar...");
-    while((EIFR&0b00000001)!=1);
+    while((PIND&0b00000100)==0); //recomeça o jogo
     delay_ms(100);
     vida2=100;
     municoes=balas;
     vida=100;
     clearram();
-    printmenu(); printinic();
-
-
+    printmenu();
 }
 
-void clear_data()
-{
-    char i=0;
-    for(i=0; i<4; i++)
-        data_array[i]='a';
-}
+
 
 int main(void)
 {
 
-    setup();
-    printinic();
-    inicio();
+    setup(); //chama a funcção para configurar registo e timers
+    printinic(); //funçao de incializaçao do ecra de entrada do lcd. frase: laser tag...
+    inicio();//função onde é inciado o processo do jogo
 
     while(1)
     {
         if(vida>0)
-            printmenu();
+            printmenu(); // chama a função enquanto a vida do jogador for maior que zero
         else
         {
-            perco++;
-            gameover();
+            perco++;   //se a vida for menor ou igual a zero incrementa o numero de derrotas
+            fim_djogo(); //e chama a função fim de jogo
         }
-        clear_data();
-        nrf_receber();
-        if(data_array[0]!='a')
+        clear_data();  //limpa o data array
+        nrf_receber(); //tenta receber a vida do adversario
+        if(data_array[0]!='a')  //verifica se recebeu algo
         {
-            vida2=data_array[0];
-            if(vida2<=0)
+            if(data_array[0]!=player)  //verificação de segurança para ver se a informação vem de outro jogador
             {
-                ganho++;
-                if(data_array[1]=='1')
+                vida2=data_array[2]; //caso a vida seja igual a zero indica que ganhamos
+                if(vida2<=0)
                 {
-                    flag_head=1;
-                    headshots++;
+                    ganho++;
+                    if(data_array[3]=='1') //se seguido da vida vier 1 indica que ganhamos por headshot
+                    {
+                        flag_head=1; //activa a flag de hedshot para ser diferenciado na função fimd de jogo
+                        headshots++; //incrementa o numero de headshots efectuados
+                    }
+                    fim_djogo();  //indica que o jogo terminou
                 }
-                gameover();
             }
         }
     }
     return 0;
 }
-
