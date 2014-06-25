@@ -411,13 +411,13 @@ void inicio()
     char i,j=0;
 
 
-    /* init hardware pins */
+ //incia o modulo RF
     nrf24_init();
 
-    /* Channel #2 , payload length: 4 */
+ //configura o modulo a funcionar no canal 4, com um buffer de tamanho 4  nrf24_config(2,4);
     nrf24_config(2,4);
 
-    /* Set the device addresses */
+  //define o mac do modulos do jogador
     nrf24_tx_address(tx1_address);
     nrf24_rx_address(rx_address);
     clearram();
@@ -430,9 +430,9 @@ void inicio()
     clearram();
     cursorxy(0,0);
     putstr("Dispare para  comecar");
-    while((PIND&0b00000100)==0);
+    while((PIND&0b00000100)==0);//aguarda que seja primido o botao de disparo
     delay_ms(100);
-    sprintf(buffer,"%c4\r\n",player);
+    sprintf(buffer,"%c4\r\n",player);//indica á base que o jogador esta pronto a jogar
     nrf_enviar(buffer);
     clearram();
     cursorxy(0,0);
@@ -442,9 +442,10 @@ void inicio()
     {
         nrf_receber();
     }
-    while(((data_array[0]!=player)&&(data_array[1]!='3')));
+    while(((data_array[0]!=player)&&(data_array[1]!='3')));//apos a base enviar o numero do player seguido de um3
+    //vai ser recebido o nome do jogador
     clearram();
-    nome[0]=data_array[2];
+    nome[0]=data_array[2];         //a string recebida e do formato "nºplayer+3+nome\n"
     nome[1]=data_array[3];
     i=2;
     while(data_array[j]!='\n')
@@ -538,7 +539,7 @@ void fim_djogo()
 {
     clearram(); //limpa todos os dados do lcd
     cursorxy(16,3);
-    if(vida2<=0||vida2==48)
+    if(vida2<=0)
     {
         putstr("YOU WIN!!");
         PORTD|= (1<<PD6);//indica que ganhamos ou perdemos
@@ -616,10 +617,10 @@ int main(void)
             if(data_array[1]=='1')
             {
                 vida2=data_array[2]; //caso a vida seja igual a zero indica que ganhamos
-                if(vida2<=0||vida2==48)
+                if(vida2<=0)
                 {
                     ganho++;
-                    if(data_array[3]=='9') //se seguido da vida vier 1 indica que ganhamos por headshot
+                    if(data_array[3]=='9') //se seguido da vida vier 9 indica que ganhamos por headshot
                     {
                         flag_head=1; //activa a flag de hedshot para ser diferenciado na função fimd de jogo
                         headshots++; //incrementa o numero de headshots efectuados
