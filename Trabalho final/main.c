@@ -14,21 +14,20 @@
 #define pedro2 {0xE7,0xE7,0xE7,0xE7,0xE7}
 #define joao1  {0xA7,0xA7,0xA7,0xA7,0xA7}
 #define joao2  {0xB7,0xB7,0xB7,0xB7,0xB7}
-#define base  {0xC8,0xC8,0xC8,0xC8,0xC8}
+#define base  {0xC7,0xC7,0xC7,0xC7,0xC7}
 //#define player 1
 
 volatile char player='1';
 
 volatile char led_pisca=10,posicao=0,flag_block=0,cont_20ms=6,cont_disparar=-1,cont_disparo=10,cont300ms=6,cont_reload=0,flag_reload,
-              pin,cont_vibr1s=0,teste=0;
+              pin,cont_vibr1s=0,teste=0,vida=100;
 
-char data_array[4],buffer[30],nome[7]="pedro";
-char vida2=100,ganho=0,perco=0,headshots=0,headshots2=0,pisca=30,flag_disparo=0,flag_head=0,vida=100,multi=0,flag_single=0;
+char data_array[4],buffer[30],nome[7];
+char vida2=100,ganho=0,perco=0,headshots=0,headshots2=0,pisca=30,flag_disparo=0,flag_head=0,multi=0,flag_single=0;
 int municoes=0;
-
 uint8_t rx_address[5] = joao1; //estabelece quais os mac's em uso
-uint8_t tx1_address[5] = pedro1; //rx corresponde ao nosso e tx para onde vai enviar
-uint8_t tx2_address[5] = base;
+uint8_t tx1_address[5] = base; //rx corresponde ao nosso e tx para onde vai enviar
+uint8_t tx2_address[5] = pedro1;
 
 void setup(void)
 {
@@ -53,9 +52,10 @@ void setup(void)
     // 1 MHz clock com prescaller de 8 demora 8us por instruçao,
     //logo o timer irá incrementar a cada 8us
     //é necessario incrementar 125 vezes para que execute uma interrupcao de 1ms
-    TCCR2A|= (1<<WGM21)|(1<<CS21);   // modo ctc, prescaller=8
-    OCR2A  = 124;
-    TIMSK2|= (1<<OCIE2A);   // ativa a interrupção do timer 2
+    TCCR2A|= (1<<WGM21) ;   // CTC mode
+    OCR2A  = 124;            // count up to 125  (zero relative!!!!)
+    TIMSK2|= (1<<OCIE2A);   // enable Timer2 Interrupt
+    TCCR2B|= (1<<CS21);  // // ativa a interrupção do timer 2
 
     //Configuração do timer 0 para gerar interrupçao de 50ms
     TCCR0A|=(1<<WGM01); //modo ctc
@@ -64,6 +64,7 @@ void setup(void)
     TIMSK0|= 2; //ativa o timer 0
 
     sei(); //activa as interrupçoes globais
+
 }
 
 /*NOTA: o nosso receptor so detecta o IR caso este tenha um frequência de 38KHz e após alguns testes verificamos
@@ -120,49 +121,48 @@ void nrf_receber() //funcao para receber pelo nrf
 void nrf_enviar(char buff[])
 {
     char tamanho=0;
-    unsigned char i=0,j;
+    unsigned char i=0;
     uint8_t temp;
 
     tamanho=strlen(buff);
-    for(j=0; j<2; j++)   //envia para a base e para o outro player,
+//envia para a base e para o outro player,
+
+
+    while(i<=tamanho)
     {
-        if(j==0)  nrf24_tx_address(tx1_address);
-        if(j==1)   nrf24_tx_address(tx2_address);
-        while(i<=tamanho)
+        data_array[0] =buff[i];
+        data_array[1] =buff[i+1];
+        data_array[2] =buff[i+2];
+        data_array[3] =buff[i+3]; //envia os dados num buffer de tamanho 4, e repete ate
+        i=i+4;                    //que todos os dados sejam envados
+
+        nrf24_send(data_array);  //envia o array
+
+
+        while(nrf24_isSending());//espera que o envio seja concluido
+
+
+        temp = nrf24_lastMessageStatus(); //analisa a transmissao
+
+        if(temp == NRF24_TRANSMISSON_OK)
         {
-            data_array[0] =buff[i];
-            data_array[1] =buff[i+1];
-            data_array[2] =buff[i+2];
-            data_array[3] =buff[i+3]; //envia os dados num buffer de tamanho 4, e repete ate
-            i=i+4;                    //que todos os dados sejam envados
-
-            nrf24_send(data_array);  //envia o array
-
-
-            while(nrf24_isSending());//espera que o envio seja concluido
-
-
-            temp = nrf24_lastMessageStatus(); //analisa a transmissao
-
-            if(temp == NRF24_TRANSMISSON_OK)
-            {
-                //enviar("recebi"); //debug
-            }
-            else if(temp == NRF24_MESSAGE_LOST)
-            {
-                //enviar("falhou"); //debug
-            }
+            //enviar("recebi"); //debug
         }
-        /* Retranmission count indicates the tranmission quality */
-        temp = nrf24_retransmissionCount();  //indica a qualidade do envio
-        //sprintf(buffer,"> Retranmission count: %d\r\n",temp);
-        //enviar(buffer);
-
-
-        nrf24_powerUpRx(); //volta para o modo receptor
-        // nrf24_powerDown(); //ou podemos desliga
-        _delay_ms(10); //espera um pouco para entrar no modo Rx
+        else if(temp == NRF24_MESSAGE_LOST)
+        {
+            //enviar("falhou"); //debug
+        }
     }
+    /* Retranmission count indicates the tranmission quality */
+    temp = nrf24_retransmissionCount();  //indica a qualidade do envio
+    //sprintf(buffer,"> Retranmission count: %d\r\n",temp);
+    //enviar(buffer);
+
+
+    nrf24_powerUpRx(); //volta para o modo receptor
+    // nrf24_powerDown(); //ou podemos desliga
+    _delay_ms(10); //espera um pouco para entrar no modo Rx
+
 }
 
 
@@ -237,20 +237,21 @@ ISR(TIMER0_COMPA_vect) //interrupcao de 50ms
 
 ISR(INT0_vect) //disparo PD2 pino4** função de disparo
 {
-    char municoes_tx1[5];
+    char municoes_tx1[8];
     if(flag_reload==0) //se estiver a  recarregar
     {
         if(multi==0) //se estiver no modo single
         {
             if(municoes>0&&cont_disparo==0)
             {
+                nrf24_tx_address(tx1_address);
                 cont_disparo=17; //delay entre cada disparo sera no minimo 17*50ms
                 municoes--; //decrementa o numero de municoes
                 if(municoes>9)
                     sprintf(municoes_tx1,"%c2%d",player,municoes);//buffer a ser enviado para a base com as municoes
                 else
                     sprintf(municoes_tx1,"%c20%d",player,municoes);
-                nrf_enviar(buffer);
+                nrf_enviar(municoes_tx1);
 
 
                 cont_disparar=0;  //flag que permite que no timer seja possivel ser executado o ciclo de disparo
@@ -260,7 +261,8 @@ ISR(INT0_vect) //disparo PD2 pino4** função de disparo
         else
         {
             if(flag_single==0&&cont_disparo==0) //se nao estiver a disparar (flag_single=0), e tiver passado
-            {                                  //o delay entre o ultimo disparo
+            {
+                //o delay entre o ultimo disparo
                 cont_disparo=2;
                 flag_single=2;// flag activa os disparos continuos no modo rifle
             }
@@ -279,7 +281,8 @@ ISR(PCINT2_vect) //rotina de interrupçoes pcint
 {
 
     pin=PIND;
-    char vida_tx[5];//buffer de envio para a base
+    int health;
+    char vida_tx[5],vida_tx1[8];//buffer de envio para a base
 
     if(((pin&0b00100011)==3)&&flag_block==0)//cabeca PD5// executa se o sensor da cabeça estiver em zero, e o flanco for descendente
     {
@@ -287,8 +290,21 @@ ISR(PCINT2_vect) //rotina de interrupçoes pcint
         flag_block=1;
         if(vida>0)
         {
-            vida=vida-80; //decrementa a vida do jogador
-            sprintf(vida_tx,"%c1%c1",player,vida);  //buffer a ser enviado para a base com a vida do jogador
+            vida=vida-80;
+            if(vida<=0)
+            {
+                vida=0; //decrementa a vida do jogador
+                sprintf(vida_tx,"%c109",player);
+                sprintf(vida_tx1,"%c1%d9",player,vida);
+            } //buffer a ser enviado para a base com a vida do jogador
+            else
+            {
+                sprintf(vida_tx,"%c1%c",player,vida);
+                sprintf(vida_tx1,"%c1%d",player,vida);
+            }
+            nrf24_tx_address(tx1_address);
+            nrf_enviar(vida_tx1);
+            nrf24_tx_address(tx2_address);
             nrf_enviar(vida_tx);
             if(vida<=0)
                 headshots2++; //se a vida for menor ou igual a zero quer dizer que o jogador perdeu com um headshot
@@ -303,8 +319,23 @@ ISR(PCINT2_vect) //rotina de interrupçoes pcint
             if(vida>0)
             {
                 vida=vida-40;
-                sprintf(vida_tx,"%c1%c",player,vida);
+                if(vida<=0)
+                {
+                    vida=0; //decrementa a vida do jogador
+                    sprintf(vida_tx,"%c100",player);
+                    sprintf(vida_tx1,"%c10%d",player,vida);
+                } //buffer a ser enviado para a base com a vida do jogador
+                else
+                {
+                    sprintf(vida_tx,"%c1%c",player,vida);
+                    sprintf(vida_tx1,"%c1%d",player,vida);
+                }
+                nrf24_tx_address(tx1_address);
+                nrf_enviar(vida_tx1);
+                nrf24_tx_address(tx2_address);
                 nrf_enviar(vida_tx);
+                if(vida<=0)
+                    headshots2++; //se a vida for menor ou igual a zero quer dizer que o jogador perdeu com um headshot
             }
         }
         else
@@ -316,7 +347,20 @@ ISR(PCINT2_vect) //rotina de interrupçoes pcint
                 if(vida>0)
                 {
                     vida=vida-20;
-                    sprintf(vida_tx,"%c1%c",player,vida);
+                    if(vida<=0)
+                    {
+                        vida=0; //decrementa a vida do jogador
+                        sprintf(vida_tx,"%c100",player);
+                        sprintf(vida_tx1,"%c10%d",player,vida);
+                    } //buffer a ser enviado para a base com a vida do jogador
+                    else
+                    {
+                        sprintf(vida_tx,"%c1%c",player,vida);
+                        sprintf(vida_tx1,"%c1%d",player,vida);
+                    }
+                    nrf24_tx_address(tx1_address);
+                    nrf_enviar(vida_tx1);
+                    nrf24_tx_address(tx2_address);
                     nrf_enviar(vida_tx);
 
                 }
@@ -364,36 +408,43 @@ void clear_data()
 
 void inicio()
 {
-    unsigned char i=0,j=0;
-    //incia o modulo RF
+    char i,j=0;
+
+
+    /* init hardware pins */
     nrf24_init();
 
-    //configura o modulo a funcionar no canal 4, com um buffer de tamanho 4  nrf24_config(2,4);
+    /* Channel #2 , payload length: 4 */
+    nrf24_config(2,4);
 
-    //define o mac do modulos do jogador
+    /* Set the device addresses */
+    nrf24_tx_address(tx1_address);
     nrf24_rx_address(rx_address);
-    do//codigo para a base confirmar que pode inicar o jogo
+    clearram();
+    cursorxy(0,0);
+    putstr("A aguardar pela    base");
+    while((data_array[0]!='3')&&(data_array[1]!='4'))//codigo para a base confirmar que pode inicar o jogo
     {
         nrf_receber();
     }
-    while((data_array[0]!='3')&&(data_array[1]!='4')); //aguarda receber "34" da base para indicar que a mesma esta pronta
-    clearram();//limpa o ecra do lcd
-    cursorxy(0,0);
-    putstr("Dispare para  comecar");//escreve no lcd a informaçao
-    while((PIND&0b00000100)==0); //aguarda que seja primido o botao de disparo
-    delay_ms(100);
-    sprintf(buffer,"14");//indica á base que o jogador esta pronto a jogar
-    nrf_enviar(buffer);//
     clearram();
-    clear_data(); //chama a função para limpar o data array
-    //
+    cursorxy(0,0);
+    putstr("Dispare para  comecar");
+    while((PIND&0b00000100)==0);
+    delay_ms(100);
+    sprintf(buffer,"%c4\r\n",player);
+    nrf_enviar(buffer);
+    clearram();
+    cursorxy(0,0);
+    putstr("A aguardar pelo dados");
+    clear_data();
     do
     {
         nrf_receber();
     }
-    while((data_array[0]!=player)&&(data_array[1]!='3'));//apos a base enviar o numero do player seguido de um3
-    //vai ser recebido o nome do jogador
-    nome[0]=data_array[2];                           //a string recebida e do formato "nºplayer+3+nome\n"
+    while(((data_array[0]!=player)&&(data_array[1]!='3')));
+    clearram();
+    nome[0]=data_array[2];
     nome[1]=data_array[3];
     i=2;
     while(data_array[j]!='\n')
@@ -411,10 +462,9 @@ void inicio()
             }
         }
     }
-    vida=100;//inicialização das variasveis a serem imprimidas no ecra
-    municoes=balas; //
+    vida=100;
+    municoes=balas;
     clearram();
-
 }
 void printmenu()
 {
@@ -460,6 +510,7 @@ void printmenu()
         {
             if(pisca>15)
             {
+
                 putstr("RECARREGAR       ");
                 pisca--;
             }
@@ -473,7 +524,7 @@ void printmenu()
         }
     }
     cursorxy(0,4);
-    putstr("Oponente: ");  //imprime no lcd a vida do adversario
+    putstr("Adversario: ");  //imprime no lcd a vida do adversario
     putint(vida2);
     if(vida2<100)
         putstr("% ");
@@ -487,10 +538,18 @@ void fim_djogo()
 {
     clearram(); //limpa todos os dados do lcd
     cursorxy(16,3);
-    if(vida2<=0)
-        putstr("YOU WIN!!"); //indica que ganhamos ou perdemos
+    if(vida2<=0||vida2==48)
+    {
+        putstr("YOU WIN!!");
+        PORTD|= (1<<PD6);//indica que ganhamos ou perdemos
+        PORTD&=~(1<<PD7);
+    }
     else
+    {
         putstr("Game Over");
+        PORTD|= (1<<PD7);//indica que ganhamos ou perdemos
+        PORTD&=~(1<<PD6);
+    }
     if(flag_head==1)  //caso tenhamos efectuado um headshot indica a mensagem
     {
         cursorxy(8,4);
@@ -520,6 +579,8 @@ void fim_djogo()
     delay_ms(10000);
     clearram();
     cursorxy(0,4);
+    PORTD&=~(1<<PD6);
+    PORTD&=~(1<<PD7);
     putstr("Dispara para  recomecar...");
     while((PIND&0b00000100)==0); //recomeça o jogo
     delay_ms(100);
@@ -552,13 +613,13 @@ int main(void)
         nrf_receber(); //tenta receber a vida do adversario
         if(data_array[0]!='a')  //verifica se recebeu algo
         {
-            if(data_array[0]!=player)  //verificação de segurança para ver se a informação vem de outro jogador
+            if(data_array[1]=='1')
             {
                 vida2=data_array[2]; //caso a vida seja igual a zero indica que ganhamos
-                if(vida2<=0)
+                if(vida2<=0||vida2==48)
                 {
                     ganho++;
-                    if(data_array[3]=='1') //se seguido da vida vier 1 indica que ganhamos por headshot
+                    if(data_array[3]=='9') //se seguido da vida vier 1 indica que ganhamos por headshot
                     {
                         flag_head=1; //activa a flag de hedshot para ser diferenciado na função fimd de jogo
                         headshots++; //incrementa o numero de headshots efectuados

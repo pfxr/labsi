@@ -20,3 +20,24 @@
 	<string.h>
 	"../nrf24.h"
 
+1402016460 source:/home/joao/Documentos/atmega/labsi/backup/nrf24.c
+	"nrf24.h"
+	<string.h>
+
+1402016478 /home/joao/Documentos/atmega/labsi/backup/nrf24.h
+	"nRF24L01.h"
+	<stdint.h>
+
+1402016460 /home/joao/Documentos/atmega/labsi/backup/nRF24L01.h
+
+1402016460 source:/home/joao/Documentos/atmega/labsi/backup/radioPinFunctions.c
+	<avr/io.h>
+
+1403532993 source:/home/joao/Documentos/atmega/labsi/backup/base/main.c
+	<avr/interrupt.h>
+	<util/delay.h>
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	"../nrf24.h"
+
